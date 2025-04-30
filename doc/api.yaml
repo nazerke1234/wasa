@@ -1,0 +1,373 @@
+openapi: 3.0.1
+info:
+  title: WASAText
+  description: API for the WASAText messaging application.
+  version: 1.0.0
+servers:
+  - url: http://api.wasatext.com/v1
+    description: Main API server
+
+paths:
+  /login:
+    post:
+      operationId: loginUser
+      summary: Login or Register a user
+      description: Logs in the user if the username exists, or registers and logs in the user if the username is new.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: Maria
+      responses:
+        '200':
+          description: Successful login or registration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    example: "12345"
+                  access_token:
+                    type: string
+                    example: "access_token_example"
+                  refresh_token:
+                    type: string
+                    example: "refresh_token_example"
+        '400':
+          description: Invalid input or missing username
+
+  /refresh:
+    post:
+      operationId: refreshToken
+      summary: Refresh access token
+      description: Refresh the access token using the refresh token.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  example: "refresh_token_example"
+      responses:
+        '200':
+          description: Successfully refreshed token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "new_access_token_example"
+        '400':
+          description: Invalid refresh token
+
+  /api/users:
+    get:
+      operationId: searchUsers
+      summary: Search users by name
+      description: Allows searching for users by username.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "Maria"
+      responses:
+        '200':
+          description: List of users matching the search
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    username:
+                      type: string
+                      example: "Maria"
+                    photo:
+                      type: string
+                      example: "https://example.com/photo.jpg"
+        '400':
+          description: Invalid search query
+
+  /api/me:
+    get:
+      operationId: getProfile
+      summary: Get the logged-in user's profile
+      description: Retrieve the logged-in user's profile information.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                    example: "Maria"
+                  photo:
+                    type: string
+                    example: "https://example.com/photo.jpg"
+        '401':
+          description: Unauthorized
+
+  /api/me/username:
+    put:
+      operationId: updateUsername
+      summary: Update the logged-in user's username
+      description: Change the username of the logged-in user.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_username:
+                  type: string
+                  example: "Maria_New"
+      responses:
+        '200':
+          description: Username updated successfully
+        '400':
+          description: Username is invalid or already taken
+        '401':
+          description: Unauthorized
+
+  /api/me/photo:
+    put:
+      operationId: updateProfilePhoto
+      summary: Update the logged-in user's profile photo
+      description: Change the profile photo of the logged-in user.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                photo_url:
+                  type: string
+                  example: "https://example.com/new-photo.jpg"
+      responses:
+        '200':
+          description: Profile photo updated successfully
+        '400':
+          description: Invalid photo URL
+        '401':
+          description: Unauthorized
+
+  /api/chats:
+    get:
+      operationId: getMyConversations
+      summary: Get the list of the user's conversations
+      description: Retrieve all conversations for the logged-in user.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    conversation_id:
+                      type: string
+                      example: "abc123"
+                    username:
+                      type: string
+                      example: "John"
+                    group_name:
+                      type: string
+                      example: "Family Group"
+                    last_message_time:
+                      type: string
+                      format: date-time
+                      example: "2024-12-09T10:00:00Z"
+                    preview:
+                      type: string
+                      example: "Hey, how are you?"
+        '401':
+          description: Unauthorized
+
+  /api/chats/{chat_id}:
+    get:
+      operationId: getConversation
+      summary: Get a specific conversation's messages
+      description: Retrieve all messages for a specific chat by chat_id.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: chat_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "abc123"
+      responses:
+        '200':
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message_id:
+                          type: string
+                          example: "msg001"
+                        sender:
+                          type: string
+                          example: "John"
+                        timestamp:
+                          type: string
+                          format: date-time
+                          example: "2024-12-09T10:00:00Z"
+                        content:
+                          type: string
+                          example: "Hello, what's up?"
+                        reactions:
+                          type: array
+                          items:
+                            type: string
+                            example: "😊"
+        '401':
+          description: Unauthorized
+        '404':
+          description: Conversation not found
+
+  /api/messages:
+    post:
+      operationId: sendMessage
+      summary: Send a message in a conversation
+      description: Send a message to a specific conversation.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chat_id:
+                  type: integer
+                  example: 1
+                content:
+                  type: string
+                  example: "Hey, what's up?"
+      responses:
+        '200':
+          description: Message sent successfully
+        '400':
+          description: Invalid conversation or content
+        '401':
+          description: Unauthorized
+
+  /api/messages/{message_id}/forward:
+    post:
+      operationId: forwardMessage
+      summary: Forward a message to another conversation
+      description: Forward an existing message to a new chat.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "msg001"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_conversation_id:
+                  type: string
+                  example: "def456"
+      responses:
+        '200':
+          description: Message forwarded successfully
+
+  /api/group/{group_id}/add:
+    post:
+      operationId: addUserToGroup
+      summary: Add a user to a group
+      description: Add a user to an existing group chat.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "group123"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_ids:
+                  type: array
+                  items:
+                    type: integer
+                    example: [2, 3]
+      responses:
+        '200':
+          description: User added to the group
+
+  /api/group/{group_id}/leave:
+    post:
+      operationId: leaveGroup
+      summary: Leave a group
+      description: Allows the user to leave a group they are part of.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "group123"
+      responses:
+        '200':
+          description: User has left the group
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
