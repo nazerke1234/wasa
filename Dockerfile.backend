@@ -13,7 +13,7 @@ RUN go mod tidy
 COPY . .
 
 # Собираем Go-приложение
-RUN go build -o /main ./backend/cmd
+RUN go build -o /main ./cmd/webapi
 
 FROM alpine:latest
 
