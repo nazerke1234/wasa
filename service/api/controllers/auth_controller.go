@@ -3,8 +3,8 @@ package controllers
 import (
 	"errors"
 	"net/http"
-	"wasa/backend/internal/utils"
-	database2 "wasa/backend/service/database"
+	"wasa/internal/utils"
+	database2 "wasa/service/database"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
