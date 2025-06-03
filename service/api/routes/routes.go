@@ -1,8 +1,8 @@
 package routes
 
 import (
-	controllers2 "wasa/backend/service/api/controllers"
-	"wasa/backend/service/api/middleware"
+	controllers2 "wasa/service/api/controllers"
+	"wasa/service/api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
