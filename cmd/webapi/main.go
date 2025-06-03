@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"wasa/backend/service/api/routes"
-	database2 "wasa/backend/service/database"
+	"wasa/service/api/routes"
+	database2 "wasa/service/database"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
