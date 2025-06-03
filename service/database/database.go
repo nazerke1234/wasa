@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"wasa/backend/service/models"
+	"wasa/service/models"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
