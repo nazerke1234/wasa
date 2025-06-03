@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"net/http"
-	"wasa/backend/internal/utils"
-	"wasa/backend/service/database"
-	"wasa/backend/service/models"
+	"wasa/internal/utils"
+	"wasa/service/database"
+	"wasa/service/models"
 
 	"github.com/gin-gonic/gin"
 )
