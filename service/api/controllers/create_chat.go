@@ -3,7 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	database2 "wasa/backend/service/database"
+	database2 "wasa/service/database"
 
 	"github.com/gin-gonic/gin"
 )
