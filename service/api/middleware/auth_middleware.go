@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
-	"wasa/backend/internal/utils"
+	"wasa/internal/utils"
 )
 
 // Middleware for JWT verification
