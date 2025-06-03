@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	database2 "wasa/backend/service/database"
+	database2 "wasa/service/database"
 
 	"github.com/gin-gonic/gin"
 )
