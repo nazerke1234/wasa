@@ -20,9 +20,6 @@ FROM alpine:latest
 # Устанавливаем необходимые зависимости (например, для PostgreSQL)
 RUN apk add --no-cache libpq
 
-# Копируем .env файл в контейнер (если он находится в корне проекта)
-COPY .env /app/.env
-
 # Копируем собранный бинарник
 COPY --from=builder /main .
 
