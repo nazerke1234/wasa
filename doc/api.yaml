@@ -3,6 +3,17 @@ info:
   title: WASAText
   description: API for the WASAText messaging application.
   version: 1.0.0
+tags:
+  - name: Authentication
+    description: Endpoints for user authentication and token management
+  - name: Users
+    description: Endpoints for user profile management and search
+  - name: Chats
+    description: Endpoints for managing chat conversations
+  - name: Messages
+    description: Endpoints for managing messages within chats
+  - name: Groups
+    description: Endpoints for managing group chats
 servers:
   - url: http://api.wasatext.com/v1
     description: Main API server
@@ -10,6 +21,8 @@ servers:
 paths:
   /login:
     post:
+      tags:
+        - Authentication
       operationId: loginUser
       summary: Login or Register a user
       description: Logs in the user if the username exists, or registers and logs in the user if the username is new.
@@ -18,10 +31,15 @@ paths:
           application/json:
             schema:
               type: object
+              description: User login credentials
               properties:
                 username:
                   type: string
-                  example: Maria
+                  description: The username to login or register with
+                  pattern: "^[a-zA-Z0-9_]{3,20}$"
+                  minLength: 3
+                  maxLength: 20
+                  example: "Maria"
       responses:
         '200':
           description: Successful login or registration
@@ -29,21 +47,46 @@ paths:
             application/json:
               schema:
                 type: object
+                description: Authentication response containing user ID and tokens
                 properties:
                   userId:
                     type: string
+                    description: The unique identifier of the user
+                    pattern: "^[0-9]+$"
+                    minLength: 1
+                    maxLength: 20
                     example: "12345"
                   access_token:
                     type: string
+                    description: JWT access token for API authentication
+                    pattern: "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$"
+                    minLength: 10
+                    maxLength: 1000
                     example: "access_token_example"
                   refresh_token:
                     type: string
+                    description: JWT refresh token for obtaining new access tokens
+                    pattern: "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$"
+                    minLength: 10
+                    maxLength: 1000
                     example: "refresh_token_example"
         '400':
           description: Invalid input or missing username
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid input
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Username is required"
 
   /refresh:
     post:
+      tags:
+        - Authentication
       operationId: refreshToken
       summary: Refresh access token
       description: Refresh the access token using the refresh token.
@@ -52,9 +95,14 @@ paths:
           application/json:
             schema:
               type: object
+              description: Refresh token request
               properties:
                 refresh_token:
                   type: string
+                  description: The refresh token to use for obtaining a new access token
+                  pattern: "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$"
+                  minLength: 10
+                  maxLength: 1000
                   example: "refresh_token_example"
       responses:
         '200':
@@ -63,15 +111,32 @@ paths:
             application/json:
               schema:
                 type: object
+                description: New access token response
                 properties:
                   access_token:
                     type: string
+                    description: New JWT access token
+                    pattern: "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$"
+                    minLength: 10
+                    maxLength: 1000
                     example: "new_access_token_example"
         '400':
           description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid refresh token
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Invalid refresh token"
 
   /api/users:
     get:
+      tags:
+        - Users
       operationId: searchUsers
       summary: Search users by name
       description: Allows searching for users by username.
@@ -83,6 +148,10 @@ paths:
           required: true
           schema:
             type: string
+            description: The username to search for
+            pattern: "^[a-zA-Z0-9_]{1,20}$"
+            minLength: 1
+            maxLength: 20
             example: "Maria"
       responses:
         '200':
@@ -91,23 +160,48 @@ paths:
             application/json:
               schema:
                 type: array
+                description: Array of user objects matching the search criteria
+                minItems: 0
+                maxItems: 100
                 items:
                   type: object
+                  description: User information
                   properties:
                     id:
                       type: integer
+                      description: Unique identifier of the user
                       example: 1
                     username:
                       type: string
+                      description: Username of the user
+                      pattern: "^[a-zA-Z0-9_]{3,20}$"
+                      minLength: 3
+                      maxLength: 20
                       example: "Maria"
                     photo:
                       type: string
+                      description: URL of the user's profile photo
+                      pattern: "^https?://[^\\s/$.?#].[^\\s]*$"
+                      minLength: 10
+                      maxLength: 500
                       example: "https://example.com/photo.jpg"
         '400':
           description: Invalid search query
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid search query
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Invalid search query"
 
   /api/me:
     get:
+      tags:
+        - Users
       operationId: getProfile
       summary: Get the logged-in user's profile
       description: Retrieve the logged-in user's profile information.
@@ -120,18 +214,39 @@ paths:
             application/json:
               schema:
                 type: object
+                description: User profile information
                 properties:
                   username:
                     type: string
+                    description: Username of the user
+                    pattern: "^[a-zA-Z0-9_]{3,20}$"
+                    minLength: 3
+                    maxLength: 20
                     example: "Maria"
                   photo:
                     type: string
+                    description: URL of the user's profile photo
+                    pattern: "^https?://[^\\s/$.?#].[^\\s]*$"
+                    minLength: 10
+                    maxLength: 500
                     example: "https://example.com/photo.jpg"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
 
   /api/me/username:
     put:
+      tags:
+        - Users
       operationId: updateUsername
       summary: Update the logged-in user's username
       description: Change the username of the logged-in user.
@@ -142,20 +257,57 @@ paths:
           application/json:
             schema:
               type: object
+              description: New username request
               properties:
                 new_username:
                   type: string
+                  description: The new username to set
+                  pattern: "^[a-zA-Z0-9_]{3,20}$"
+                  minLength: 3
+                  maxLength: 20
                   example: "Maria_New"
       responses:
         '200':
           description: Username updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Success response for username update
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "Username updated successfully"
         '400':
           description: Username is invalid or already taken
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid username
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Username is already taken"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
 
   /api/me/photo:
     put:
+      tags:
+        - Users
       operationId: updateProfilePhoto
       summary: Update the logged-in user's profile photo
       description: Change the profile photo of the logged-in user.
@@ -166,20 +318,57 @@ paths:
           application/json:
             schema:
               type: object
+              description: New profile photo request
               properties:
                 photo_url:
                   type: string
+                  description: URL of the new profile photo
+                  pattern: "^https?://[^\\s/$.?#].[^\\s]*$"
+                  minLength: 10
+                  maxLength: 500
                   example: "https://example.com/new-photo.jpg"
       responses:
         '200':
           description: Profile photo updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Success response for photo update
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "Profile photo updated successfully"
         '400':
           description: Invalid photo URL
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid photo URL
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Invalid photo URL"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
 
   /api/chats:
     get:
+      tags:
+        - Chats
       operationId: getMyConversations
       summary: Get the list of the user's conversations
       description: Retrieve all conversations for the logged-in user.
@@ -192,30 +381,62 @@ paths:
             application/json:
               schema:
                 type: array
+                description: Array of conversation objects
+                minItems: 0
+                maxItems: 100
                 items:
                   type: object
+                  description: Conversation information
                   properties:
                     conversation_id:
                       type: string
+                      description: Unique identifier of the conversation
+                      pattern: "^[a-zA-Z0-9_-]{1,50}$"
+                      minLength: 1
+                      maxLength: 50
                       example: "abc123"
                     username:
                       type: string
+                      description: Username of the conversation partner
+                      pattern: "^[a-zA-Z0-9_]{3,20}$"
+                      minLength: 3
+                      maxLength: 20
                       example: "John"
                     group_name:
                       type: string
+                      description: Name of the group chat (if applicable)
+                      pattern: "^[a-zA-Z0-9_\\s]{1,50}$"
+                      minLength: 1
+                      maxLength: 50
                       example: "Family Group"
                     last_message_time:
                       type: string
                       format: date-time
+                      description: Timestamp of the last message in the conversation
                       example: "2024-12-09T10:00:00Z"
                     preview:
                       type: string
+                      description: Preview of the last message
+                      minLength: 0
+                      maxLength: 100
                       example: "Hey, how are you?"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
 
   /api/chats/{chat_id}:
     get:
+      tags:
+        - Chats
       operationId: getConversation
       summary: Get a specific conversation's messages
       description: Retrieve all messages for a specific chat by chat_id.
@@ -227,6 +448,10 @@ paths:
           required: true
           schema:
             type: string
+            description: Unique identifier of the chat
+            pattern: "^[a-zA-Z0-9_-]{1,50}$"
+            minLength: 1
+            maxLength: 50
             example: "abc123"
       responses:
         '200':
@@ -235,37 +460,83 @@ paths:
             application/json:
               schema:
                 type: object
+                description: Conversation information with messages
                 properties:
                   messages:
                     type: array
+                    description: Array of message objects
+                    minItems: 0
+                    maxItems: 100
                     items:
                       type: object
+                      description: Message information
                       properties:
                         message_id:
                           type: string
+                          description: Unique identifier of the message
+                          pattern: "^[a-zA-Z0-9_-]{1,50}$"
+                          minLength: 1
+                          maxLength: 50
                           example: "msg001"
                         sender:
                           type: string
+                          description: Username of the message sender
+                          pattern: "^[a-zA-Z0-9_]{3,20}$"
+                          minLength: 3
+                          maxLength: 20
                           example: "John"
                         timestamp:
                           type: string
                           format: date-time
+                          description: Timestamp when the message was sent
                           example: "2024-12-09T10:00:00Z"
                         content:
                           type: string
+                          description: Content of the message
+                          minLength: 1
+                          maxLength: 1000
                           example: "Hello, what's up?"
                         reactions:
                           type: array
+                          description: Array of reactions to the message
+                          minItems: 0
+                          maxItems: 20
                           items:
                             type: string
+                            description: Emoji reaction
+                            pattern: "^[\\p{Emoji}]$"
+                            minLength: 1
+                            maxLength: 2
                             example: "😊"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
         '404':
           description: Conversation not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for conversation not found
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Conversation not found"
 
   /api/messages:
     post:
+      tags:
+        - Messages
       operationId: sendMessage
       summary: Send a message in a conversation
       description: Send a message to a specific conversation.
@@ -276,23 +547,63 @@ paths:
           application/json:
             schema:
               type: object
+              description: Message to send
               properties:
                 chat_id:
                   type: integer
+                  description: ID of the chat to send the message to
                   example: 1
                 content:
                   type: string
+                  description: Content of the message
+                  minLength: 1
+                  maxLength: 1000
                   example: "Hey, what's up?"
       responses:
         '200':
           description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Success response for message sent
+                properties:
+                  message_id:
+                    type: string
+                    description: ID of the sent message
+                    pattern: "^[a-zA-Z0-9_-]{1,50}$"
+                    minLength: 1
+                    maxLength: 50
+                    example: "msg001"
         '400':
           description: Invalid conversation or content
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid message
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Invalid message content"
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
 
   /api/messages/{message_id}/forward:
     post:
+      tags:
+        - Messages
       operationId: forwardMessage
       summary: Forward a message to another conversation
       description: Forward an existing message to a new chat.
@@ -304,22 +615,79 @@ paths:
           required: true
           schema:
             type: string
+            description: ID of the message to forward
+            pattern: "^[a-zA-Z0-9_-]{1,50}$"
+            minLength: 1
+            maxLength: 50
             example: "msg001"
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              description: Forward message request
               properties:
                 target_conversation_id:
                   type: string
+                  description: ID of the target conversation
+                  pattern: "^[a-zA-Z0-9_-]{1,50}$"
+                  minLength: 1
+                  maxLength: 50
                   example: "def456"
       responses:
         '200':
           description: Message forwarded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Success response for message forwarded
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "Message forwarded successfully"
+        '400':
+          description: Invalid target conversation
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid target
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Invalid target conversation"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
+        '404':
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for message not found
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Message not found"
 
   /api/group/{group_id}/add:
     post:
+      tags:
+        - Groups
       operationId: addUserToGroup
       summary: Add a user to a group
       description: Add a user to an existing group chat.
@@ -331,24 +699,81 @@ paths:
           required: true
           schema:
             type: string
+            description: ID of the group
+            pattern: "^[a-zA-Z0-9_-]{1,50}$"
+            minLength: 1
+            maxLength: 50
             example: "group123"
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              description: Add users request
               properties:
                 user_ids:
                   type: array
+                  description: Array of user IDs to add to the group
+                  minItems: 1
+                  maxItems: 50
                   items:
                     type: integer
-                    example: [2, 3]
+                    description: User ID to add
+                    example: 2
       responses:
         '200':
           description: User added to the group
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Success response for user added
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "User added to the group"
+        '400':
+          description: Invalid user IDs
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for invalid user IDs
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Invalid user IDs"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for group not found
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Group not found"
 
   /api/group/{group_id}/leave:
     post:
+      tags:
+        - Groups
       operationId: leaveGroup
       summary: Leave a group
       description: Allows the user to leave a group they are part of.
@@ -360,10 +785,48 @@ paths:
           required: true
           schema:
             type: string
+            description: ID of the group to leave
+            pattern: "^[a-zA-Z0-9_-]{1,50}$"
+            minLength: 1
+            maxLength: 50
             example: "group123"
       responses:
         '200':
           description: User has left the group
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Success response for leaving group
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                    example: "Successfully left the group"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for unauthorized access
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Unauthorized access"
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Error response for group not found
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the issue
+                    example: "Group not found"
 
 components:
   securitySchemes:
