@@ -1,28 +1,9 @@
-FROM golang:1.23-alpine as builder
-
-# Устанавливаем рабочую директорию в контейнере
-WORKDIR /app
-
-# Копируем go.mod и go.sum для установки зависимостей
-COPY go.mod go.sum ./
-
-# Устанавливаем зависимости
-RUN go mod tidy
-
-# Копируем весь проект в контейнер
+FROM golang:1.24.4 AS builder
+WORKDIR /src/
 COPY . .
-
-# Собираем Go-приложение
-RUN go build -o /main ./cmd/webapi
-
-FROM alpine:latest
-
-# Устанавливаем необходимые зависимости (например, для PostgreSQL)
-RUN apk add --no-cache libpq
-
-# Копируем собранный бинарник
-COPY --from=builder /main .
-
-EXPOSE 8080
-
-CMD ["./main"]
+RUN go build -o /app/webapi ./cmd/webapi
+FROM debian:bookworm
+EXPOSE 3000 4000
+WORKDIR /app/
+COPY --from=builder /app/webapi ./
+CMD ["/app/webapi"]

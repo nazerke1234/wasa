@@ -1,50 +1,56 @@
 package database
 
-import (
-	"fmt"
-	"gorm.io/gorm"
-)
+import "database/sql"
 
-// User model
 type User struct {
-	gorm.Model
-	Username string `gorm:"uniqueIndex;not null"`
-	Photo    string // Profile photo URL
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Photo []byte `json:"photo,omitempty"`
 }
 
-// Chat model (group or private)
+type Group struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Photo []byte `json:"photo,omitempty"`
+}
+
 type Chat struct {
-	gorm.Model
-	Name    string
-	IsGroup bool   // Flag indicating if the chat is a group
-	Photo   string // Group photo
-	Members []User `gorm:"many2many:chat_users;"` // Many-to-many relationship
+	Id          string         `json:"id"`
+	Name        string         `json:"name"`
+	Type        string         `json:"type"`
+	CreatedAt   string         `json:"createdAt"`
+	Members     []string       `json:"members"`
+	LastMessage *Message       `json:"lastMessage,omitempty"`
+	Messages    []Message      `json:"messages,omitempty"`
+	ChatPhoto   sql.NullString `json:"chatPhoto,omitempty"`
 }
 
-// Message model
 type Message struct {
-	gorm.Model
-	ChatID        uint
-	SenderID      uint
-	Content       string
-	RecipientID   uint
-	Comment       *string
-	IsForwarded   bool
-	ForwardedFrom *uint
+	Id                string   `json:"id"`
+	ChatId            string   `json:"chatId"`
+	SenderId          string   `json:"senderId"`
+	SenderName        string   `json:"senderName"`
+	Content           string   `json:"content"`
+	Timestamp         string   `json:"timestamp"`
+	Attachment        []byte   `json:"attachment"`
+	SenderPhoto       string   `json:"senderPhoto,omitempty"`
+	ReactionCount     int      `json:"reactionCount"`
+	ReactingUserNames []string `json:"reactingUserNames"`
+	Status            string   `json:"status"`
+	ReplyTo           string   `json:"replyTo,omitempty"`
+	ReplyContent      string   `json:"replyContent,omitempty"`
+	ReplySenderName   string   `json:"replySenderName,omitempty"`
+	ReplyAttachment   []byte   `json:"replyAttachment,omitempty"`
 }
 
-type ChatUser struct {
-	ChatID uint `gorm:"primaryKey"`
-	UserID uint `gorm:"primaryKey"`
+type Comment struct {
+	Id       string `json:"id"`
+	AuthorId string `json:"authorId"`
 }
 
-// Migration function
-func MigrateDB() {
-	// Perform migration to create tables
-	err := DB.AutoMigrate(&User{}, &Chat{}, &Message{}, &ChatUser{})
-	if err != nil {
-		fmt.Println("Error during migration:", err)
-	} else {
-		fmt.Println("Migration completed successfully")
-	}
+type ReadReceipt struct {
+	MessageId   string  `json:"messageId"`
+	UserId      string  `json:"userId"`
+	DeliveredAt string  `json:"deliveredAt"`
+	ReadAt      *string `json:"readAt,omitempty"`
 }
