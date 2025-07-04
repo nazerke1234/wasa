@@ -482,6 +482,13 @@ paths:
         '204':
           description: Comment deleted successfully.
 
+  /liveness:
+    get:
+      responses:
+        '200':
+          description: Success
+      summary: 'TODO: Describe GET /liveness'
+
   /search:
     get:
       tags:

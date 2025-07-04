@@ -1,6 +1,6 @@
 module github.com/nazerke1234/wasa
 
-go 1.24.4
+go 1.17
 
 require (
 	github.com/ardanlabs/conf v1.5.0
