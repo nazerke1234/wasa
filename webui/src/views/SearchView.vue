@@ -94,7 +94,7 @@ export default {
       const senderId = localStorage.getItem('token');
       localStorage.setItem('conversationName', userName);
       try {
-        const res = await axios.post('/conversations', { senderId, recipientId: userId });
+        const res = await axios.post('/chats', { senderId, recipientId: userId });
         const convoId = res.data.conversationId;
         this.$router.push(`/conversations/${convoId}`);
       } catch (e) {
@@ -216,3 +216,4 @@ button:hover {
   margin-top: 1rem;
 }
 </style>
+
