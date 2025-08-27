@@ -71,7 +71,7 @@ export default {
         const token = localStorage.getItem("token");
         if (!token) return this.$router.push("/");
 
-        const { data } = await this.$axios.get("/conversations", {
+        const { data } = await this.$axios.get("/chats", {
           headers: { Authorization: `Bearer ${token}` },
         });
         this.chatThreads = data || [];
@@ -225,3 +225,4 @@ export default {
   color: #999;
 }
 </style>
+
