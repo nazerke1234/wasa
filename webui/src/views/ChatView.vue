@@ -158,7 +158,7 @@ export default {
       if (this.pendingReply) form.append("replyTo", this.pendingReply.id);
       if (this.selectedFile) form.append("attachment", this.selectedFile);
 
-      await axios.post(`/conversations/${this.convoId}/message`, form, {
+      await axios.post(`/chats/${this.convoId}/message`, form, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -173,7 +173,7 @@ export default {
       const token = this.myToken;
       if (!token) return;
 
-      const res = await axios.get(`/conversations/${this.convoId}`, {
+      const res = await axios.get(`/chats/${this.convoId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -204,7 +204,7 @@ export default {
       if (!token || msg.senderId === token) return;
 
       const reacted = (msg.reactingUserNames || []).includes(this.myName);
-      const endpoint = `/conversations/${this.convoId}/message/${msg.id}/comment`;
+      const endpoint = `/chats/${this.convoId}/message/${msg.id}/comment`;
 
       try {
         if (reacted) {
@@ -222,7 +222,7 @@ export default {
       const token = this.myToken;
       if (!token) return;
 
-      await axios.delete(`/conversations/${this.convoId}/message/${msg.id}`, {
+      await axios.delete(`/chats/${this.convoId}/message/${msg.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       this.chatMessages = this.chatMessages.filter(m => m.id !== msg.id);
@@ -252,7 +252,7 @@ export default {
     },
     async loadChats(id) {
       const token = this.myToken;
-      const res = await axios.get("/conversations", {
+      const res = await axios.get("/chats", {
         headers: { Authorization: `Bearer ${token}` },
       });
       this.forwardMenus[id].available = res.data.filter(c => c.id !== this.convoId);
@@ -279,7 +279,7 @@ export default {
       if (!token) return;
 
       const convRes = await axios.post(
-        "/conversations",
+        "/chats",
         { senderId: token, recipientId: uid },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -295,7 +295,7 @@ export default {
       const name = this.myName;
 
       await axios.post(
-        `/conversations/${this.convoId}/message/${mid}/forward`,
+        `/chats/${this.convoId}/message/${mid}/forward`,
         { targetConversationId: targetId, forwarderName: name },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -455,3 +455,4 @@ export default {
   padding-left: 0;
 }
 </style>
+
