@@ -140,7 +140,7 @@ export default {
       form.append('image', this.file);
       const me = localStorage.getItem('token');
       const memberIds = [...this.selectedUsers.map(u => u.id), me];
-      form.append('members', JSON.stringify(memberIds));
+      form.append('membersJson', JSON.stringify(memberIds));
       try {
         await axios.post('/groups', form, {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -255,3 +255,4 @@ export default {
   border-radius: 8px;
 }
 </style>
+
