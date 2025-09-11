@@ -296,7 +296,7 @@ export default {
 
       await axios.post(
         `/chats/${this.convoId}/message/${mid}/forward`,
-        { targetChatId: targetId, forwarderName: name },
+        { targetChatId: targetId},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -455,5 +455,6 @@ export default {
   padding-left: 0;
 }
 </style>
+
 
 
