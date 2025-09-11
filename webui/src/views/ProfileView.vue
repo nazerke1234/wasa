@@ -81,7 +81,7 @@ export default {
           await axios.put('/users/photo', base64, {
             headers: { 
               Authorization: `Bearer ${token}`,
-              'Content-Type': 'image/jpeg' // или 'image/png' в зависимости от файла
+              'Content-Type': 'image/jpeg' 
             }
           });
           
@@ -230,3 +230,4 @@ input[type="text"], input[type="file"] {
 }
 
 </style>
+
