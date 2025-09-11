@@ -74,38 +74,64 @@ export default {
     async changePhoto() {
       try {
         const token = localStorage.getItem('token');
-        const form = new FormData();
-        form.append('photo', this.selectedPhoto);
-
-        await axios.put('/users/photo', form, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        this.selectedPhoto = null;
-        alert('Photo updated!');
-        this.loadProfile();
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64 = reader.result.split(',')[1];
+          
+          await axios.put('/users/photo', base64, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'image/jpeg' // или 'image/png' в зависимости от файла
+            }
+          });
+          
+          alert('Photo updated!');
+          this.loadProfile();
+        };
+        reader.readAsDataURL(this.selectedPhoto);
       } catch (e) {
         console.error(e);
         this.error = 'Could not update photo.';
       }
-    },
+    }
     async changeName() {
       try {
         const token = localStorage.getItem('token');
-
-        const { data } = await axios.put('/users/name', { name: this.newName }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        localStorage.setItem('name', data.name);
-        this.displayName = data.name;
-        this.newName = '';
-        alert('Username updated!');
-      } catch (e) {
-        console.error(e);
-        this.error = 'Could not update username.';
+        
+        // Проверка на существующее имя
+        if (this.newName === this.displayName) {
+          this.error = "New username cannot be the same as current";
+          return;
+        }
+    
+        const response = await axios.put('/users/name', 
+          { name: this.newName }, 
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+    
+        if (response.status === 200) {
+          localStorage.setItem('name', response.data.name);
+          this.displayName = response.data.name;
+          this.newName = '';
+          this.error = null;
+          alert('Username updated successfully!');
+        }
+        
+      } catch (error) {
+        console.error('Update error:', error);
+        
+        if (error.response?.status === 400 || error.response?.status === 409) {
+          this.error = "Username already exists or is invalid";
+        } else {
+          this.error = "Could not update username. Please try again.";
+        }
       }
-    },
+    }
     reloadProfile() {
       this.loadProfile();
     },
@@ -202,4 +228,5 @@ input[type="text"], input[type="file"] {
   flex: 1;
   max-width: 300px;
 }
+
 </style>
