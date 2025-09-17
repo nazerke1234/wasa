@@ -93,7 +93,7 @@ export default {
         console.error(e);
         this.error = 'Could not update photo.';
       }
-    }
+    },
     async changeName() {
       try {
         const token = localStorage.getItem('token');
@@ -230,4 +230,5 @@ input[type="text"], input[type="file"] {
 }
 
 </style>
+
 
