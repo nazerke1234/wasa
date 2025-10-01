@@ -131,7 +131,7 @@ export default {
           this.error = "Could not update username. Please try again.";
         }
       }
-    }
+    },
     reloadProfile() {
       this.loadProfile();
     },
@@ -230,5 +230,6 @@ input[type="text"], input[type="file"] {
 }
 
 </style>
+
 
 
