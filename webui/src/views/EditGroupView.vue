@@ -1,294 +1,372 @@
 <template>
-  <div class="group-info-wrapper">
-    <div class="group-header">
-      <div class="photo-box">
-        <img v-if="groupPhoto" :src="groupPhoto" alt="Group Photo" class="group-img" />
+  <div class="group-settings-panel">
+    <div class="settings-header">
+      <div class="group-image-wrapper">
+        <img v-if="groupImage" :src="groupImage" alt="Group Image" class="group-image" />
       </div>
-      <div class="info-box">
-        <h1 class="group-title">{{ groupName }}</h1>
-        <div class="edit-name">
+      <div class="group-details">
+        <h1 class="group-title">{{ groupTitle }}</h1>
+        <div class="name-update-section">
           <input
-            v-model="newGroupName"
-            placeholder="New group name"
+            v-model="updatedGroupTitle"
+            placeholder="Enter new group title"
             maxlength="16"
             minlength="3"
           />
-          <button @click="updateGroupName" :disabled="!newGroupName || newGroupName === groupName">
-            Rename
+          <button
+            @click="modifyGroupTitle"
+            :disabled="!updatedGroupTitle || updatedGroupTitle === groupTitle"
+          >
+            Change Group Title
           </button>
         </div>
-        <div class="edit-photo">
-          <input type="file" @change="handleGroupPhotoUpload" accept="image/*" />
-          <button @click="updateGroupPhoto" :disabled="!newGroupPhoto">Change Photo</button>
+        <div class="image-update-section">
+          <input type="file" @change="processImageSelection" accept="image/*" />
+          <button @click="modifyGroupImage" :disabled="!newGroupImage">Change Group Image</button>
         </div>
-
-        <div class="member-section">
-          <h3>Add Members</h3>
-          <form @submit.prevent="searchUsers" class="search-form">
-            <input v-model="query" placeholder="Search users..." />
-            <button type="submit">Search</button>
+        <div class="member-addition-section">
+          <h3>Include New Members</h3>
+          <form @submit.prevent="findUsers" class="user-search-form">
+            <input
+              v-model="searchQuery"
+              placeholder="Find users by username"
+              class="search-field"
+            />
+            <button type="submit" class="search-submit-btn">Find</button>
           </form>
-
-          <div v-if="showResults">
-            <div v-if="users.length === 0">No results for "{{ lastQuery }}"</div>
-            <div v-else class="user-cards">
-              <div v-for="user in users" :key="user.id" class="user-card">
-                <span>@{{ user.name }}</span>
+          
+          <div v-if="displaySearchResults" class="search-result-area">
+            <div v-if="searchResults.length === 0" class="empty-results">
+              No users found for "{{ previousSearchQuery }}"
+            </div>
+            <div v-else class="result-list">
+              <div v-for="user in searchResults" :key="user.id" class="result-item">
+                <span class="result-username">{{ user.name }}</span>
                 <button
-                  @click="handleAddToGroup(user.id)"
-                  :disabled="isMember(user.id)"
+                  class="include-btn"
+                  @click="includeUserInGroup(user.id)"
+                  :disabled="isCurrentMember(user.id)"
                 >
-                  {{ isMember(user.id) ? 'Member' : 'Add' }}
+                  {{ isCurrentMember(user.id) ? 'Already in group' : 'Include in Group' }}
                 </button>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="leave-box">
-          <button class="leave-btn" @click="leaveGroup">Leave Group</button>
+        <div class="group-exit-section">
+          <button class="exit-btn" @click="exitGroup">
+            Exit Group
+          </button>
         </div>
       </div>
     </div>
-    <ErrorMsg v-if="errormsg" :msg="errormsg" />
+    <ErrorDisplay v-if="errorMessage" :msg="errorMessage" />
   </div>
 </template>
 
 <script>
-import axios from '../services/axios';
-import ErrorMsg from '../components/ErrorMsg.vue';
+import axios from "../services/axios";
+import ErrorDisplay from "../components/ErrorMsg.vue";
 
 export default {
-  name: 'GroupEdit',
-  components: { ErrorMsg },
+  name: "GroupSettingsPanel",
+  components: {
+    ErrorDisplay,
+  },
   data() {
     return {
-      token: localStorage.getItem('token'),
-      groupId: this.$route.params.uuid,
-      groupName: localStorage.getItem('groupName'),
-      groupPhoto: null,
-      newGroupName: '',
-      newGroupPhoto: null,
-      errormsg: null,
-      query: '',
-      lastQuery: '',
-      users: [],
-      loading: false,
-      showResults: false,
-      members: [],
+      authToken: localStorage.getItem("token"),
+      groupIdentifier: this.$route.params.uuid,
+      groupTitle: localStorage.getItem("groupName"),
+      groupImage: null,
+      updatedGroupTitle: "", 
+      newGroupImage: null, 
+      errorMessage: null, 
+      searchQuery: "",
+      previousSearchQuery: "",
+      searchResults: [],
+      isLoading: false,
+      displaySearchResults: false,
+      groupMembers: [],
     };
   },
   methods: {
-    async fetchGroupProfile() {
+    async loadGroupDetails() {
       try {
-        if (!this.token) return this.$router.push('/');
-        const { data } = await axios.get(`/groups/${this.groupId}`, {
-          headers: { Authorization: `Bearer ${this.token}` },
+        const userToken = localStorage.getItem("token");
+        if (!userToken) {
+          this.$router.push({ path: "/" });
+          return;
+        }
+        const response = await axios.get(`/groups/${this.groupIdentifier}`, {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
         });
-        this.groupPhoto = data.groupPhoto ? `data:image/*;base64,${data.groupPhoto}` : null;
-        this.members = data.members;
-      } catch (err) {
-        console.error(err);
-        this.errormsg = 'Could not load group data.';
+        const groupImageData = response.data.groupPhoto;
+        this.groupImage = groupImageData ? `data:image/*;base64,${groupImageData}` : null;
+        this.groupMembers = response.data.members;
+      } catch (error) {
+        console.error("Unable to load group details:", error);
+        this.errorMessage = "Unable to load group information. Please attempt again later.";
       }
     },
-    handleGroupPhotoUpload(e) {
-      const file = e.target.files[0];
-      if (file) this.newGroupPhoto = file;
-    },
-    async updateGroupPhoto() {
-      if (!this.newGroupPhoto) return;
-      try {
-        const formData = new FormData();
-        formData.append('photo', this.newGroupPhoto);
-        await axios.put(`/groups/${this.groupId}/photo`, formData, {
-          headers: { Authorization: `Bearer ${this.token}` },
-        });
-        alert('Group photo updated!');
-        this.newGroupPhoto = null;
-        this.fetchGroupProfile();
-      } catch (err) {
-        console.error(err);
-        this.errormsg = 'Photo update failed.';
+    processImageSelection(event) {
+      const selectedFile = event.target.files[0];
+      if (selectedFile) {
+        this.newGroupImage = selectedFile;
       }
     },
-    async updateGroupName() {
-      if (!this.newGroupName || this.newGroupName === this.groupName) return;
+    async modifyGroupImage() {
+      if (!this.newGroupImage) return;
+      try {
+        const imageData = new FormData();
+        imageData.append("photo", this.newGroupImage);
+        await axios.put(`/groups/${this.groupIdentifier}/photo`, imageData, {
+          headers: {
+            Authorization: `Bearer ${this.authToken}`,
+          },
+        });
+        alert("Group image successfully updated!");
+        this.newGroupImage = null;
+        this.loadGroupDetails();
+      } catch (error) {
+        console.error("Unable to update group image:", error);
+        this.errorMessage = "Unable to update group image. Please attempt again.";
+      }
+    },
+    async modifyGroupTitle() {
+      if (!this.updatedGroupTitle || this.updatedGroupTitle === this.groupTitle) return;
       try {
         await axios.put(
-          `/groups/${this.groupId}/name`,
-          { groupName: this.newGroupName },
-          { headers: { Authorization: `Bearer ${this.token}` } }
+          `/groups/${this.groupIdentifier}/name`,
+          { groupName: this.updatedGroupTitle },
+          {
+            headers: {
+              Authorization: `Bearer ${this.authToken}`,
+            },
+          }
         );
-        alert('Group name updated!');
-        localStorage.setItem('groupName', this.newGroupName);
-        this.groupName = this.newGroupName;
-        this.newGroupName = '';
-      } catch (err) {
-        console.error(err);
-        this.errormsg = 'Name update failed.';
+        alert("Group title successfully updated!");
+        localStorage.setItem("groupName", this.updatedGroupTitle);
+        this.groupTitle = this.updatedGroupTitle;
+        this.updatedGroupTitle = "";
+      } catch (error) {
+        console.error("Unable to update group title:", error);
+        this.errorMessage = "Unable to update group title. Please attempt again.";
       }
     },
-    async leaveGroup() {
-      if (!confirm('Are you sure you want to leave?')) return;
-      try {
-        await axios.delete(`/groups/${this.groupId}`, {
-          headers: { Authorization: `Bearer ${this.token}` },
-        });
-        this.$router.push('/groups');
-      } catch (err) {
-        console.error(err);
-        this.errormsg = 'Leave group failed.';
-      }
-    },
-    async searchUsers() {
-      if (!this.query.trim()) {
-        this.errormsg = 'Enter a name.';
-        this.showResults = false;
+    async exitGroup() {
+      if (!confirm('Are you certain you wish to exit this group?')) {
         return;
       }
-      this.loading = true;
-      this.errormsg = null;
       try {
-        const { data } = await axios.get('/search', {
-          params: { username: this.query },
+        await axios.delete(`/groups/${this.groupIdentifier}`, {
+          headers: {
+            Authorization: `Bearer ${this.authToken}`,
+          },
         });
-        this.users = data;
-        this.lastQuery = this.query;
-        this.showResults = true;
-      } catch (err) {
-        console.error(err);
-        this.errormsg = 'Search failed.';
-      } finally {
-        this.loading = false;
+        this.$router.push({ path: "/groups" });
+      } catch (error) {
+        console.error("Unable to exit group:", error);
+        this.errorMessage = "Unable to exit group. Please attempt again.";
       }
-    },
-    isMember(id) {
-      return this.members.includes(id);
-    },
-    async handleAddToGroup(id) {
-      if (this.isMember(id)) return;
+    },  
+    async findUsers() {
+      if (!this.searchQuery.trim()) {
+        this.errorMessage = "Please provide a search term";
+        this.displaySearchResults = false;
+        return;
+      }
+
+      this.isLoading = true;
+      this.errorMessage = null;
       try {
-        await axios.post(
-          `/groups/${this.groupId}`,
-          { userId: id },
-          { headers: { Authorization: `Bearer ${this.token}` } }
-        );
-        this.members.push(id);
-      } catch (err) {
-        console.error(err);
-        this.errormsg = 'Add failed.';
+        const response = await axios.get(`/search`, {
+          params: { username: this.searchQuery }
+        });
+        this.searchResults = response.data;
+        this.previousSearchQuery = this.searchQuery;
+        this.displaySearchResults = true;
+      } catch (error) {
+        console.error("Search operation failed:", error);
+        this.errorMessage = "Unable to find users. Please attempt again.";
+      } finally {
+        this.isLoading = false;
       }
     },
+
+    isCurrentMember(userId) {
+      return this.groupMembers.includes(userId);
+    },
+
+    async includeUserInGroup(userId) {
+      if (this.isCurrentMember(userId)) return;
+      try {
+        await axios.post(`/groups/${this.groupIdentifier}`, 
+        {  
+          userId: userId,
+        },
+        {
+            headers: {
+            Authorization: `Bearer ${this.authToken}`,
+            },}
+          );
+        this.groupMembers.push(userId);
+        this.errorMessage = null;
+      } catch (error) {
+        console.error("Unable to include user:", error);
+        this.errorMessage = "Unable to include user in group. Please attempt again.";
+      }
+  },
   },
   mounted() {
-    this.fetchGroupProfile();
+    this.loadGroupDetails();
   },
 };
 </script>
 
 <style scoped>
-.group-info-wrapper {
-  padding: 2rem;
-  max-width: 900px;
-  margin: auto;
-  background-color: #f9fafb;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+.member-addition-section {
+  margin-top: 2rem;
+  padding: 1rem;
+  border-top: 1px solid #eee;
 }
-.group-header {
+
+.user-search-form {
   display: flex;
-  flex-direction: row;
-  gap: 1.5rem;
-  align-items: flex-start;
+  gap: 1rem;
+  margin: 1rem 0;
 }
-.photo-box {
-  flex: 0 0 120px;
+
+.search-field {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-submit-btn {
+  padding: 0.5rem 1rem;
+  background-color: #28a745;
+  color: white;
+}
+
+.search-result-area {
+  margin-top: 1rem;
+}
+
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.include-btn {
+  padding: 0.25rem 0.75rem;
+  background-color: #17a2b8;
+  color: white;
+}
+
+.include-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.empty-results {
+  color: #666;
+  font-style: italic;
+  padding: 1rem;
+  text-align: center;
+}
+
+.group-settings-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.settings-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.group-image-wrapper {
+  flex: 0 0 auto;
+  width: 120px;
   height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e0e0e0;
+  border: 1px solid #ccc;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
 }
-.group-img {
+
+.group-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.info-box {
-  flex: 1;
-}
-.group-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 1rem;
-}
-.edit-name,
-.edit-photo,
-.search-form,
-.leave-box {
-  margin-bottom: 1rem;
-  display: flex;
-  gap: 0.5rem;
-}
-input[type="text"],
-input[type="file"],
-button {
-  padding: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+
+.no-image-placeholder {
+  color: #aaa;
   font-size: 14px;
 }
+
+.group-details {
+  flex: 1;
+}
+
+.group-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.name-update-section,
+.image-update-section {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
 button {
-  background: #007bff;
+  padding: 8px 12px;
+  background-color: #007bff;
   color: white;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
 }
-button:hover:not(:disabled) {
-  background: #0056b3;
-}
+
 button:disabled {
-  background: #cccccc;
+  background-color: #ccc;
   cursor: not-allowed;
 }
-.member-section {
-  margin-top: 2rem;
-}
-.user-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-.user-card {
-  display: flex;
-  justify-content: space-between;
-  background: white;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-.leave-btn {
-  background-color: #dc3545;
-  color: white;
-}
-.leave-btn:hover {
-  background-color: #c82333;
-}
-@media (max-width: 768px) {
-  .group-header {
-    flex-direction: column;
-    align-items: center;
-  }
-  .photo-box {
-    width: 100px;
-    height: 100px;
-  }
-  .group-title {
-    text-align: center;
-  }
+
+button:hover:not(:disabled) {
+  background-color: #0056b3;
 }
 </style>
