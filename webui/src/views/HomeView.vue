@@ -55,7 +55,7 @@
 import ErrorMsg from "../components/ErrorMsg.vue";
 
 export default {
-  name: "ConversationList",
+  name: "HomeView",
   components: {
     ErrorMsg,
   },
@@ -295,3 +295,4 @@ export default {
   }
 }
 </style>
+
