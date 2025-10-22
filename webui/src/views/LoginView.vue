@@ -1,148 +1,169 @@
-<template>
-  <div class="login-wrapper">
-    <div class="login-box">
-      <h2 class="welcome-text">Welcome to WASAText</h2>
-      <div class="form-section">
-        <input
-          v-model="userName"
-          type="text"
-          placeholder="Enter your name"
-          class="name-input"
-        />
-        <button @click="handleLogin" class="submit-btn">Log In</button>
-      </div>
-      <ErrorMsg v-if="error" :msg="error" />
-    </div>
-  </div>
-</template>
-
 <script>
-import ErrorMsg from '../components/ErrorMsg.vue';
-
 export default {
-  components: { ErrorMsg },
   data() {
     localStorage.clear();
     return {
-      userName: '',
-      error: null,
-      identity: {
-        token: '',
-        displayName: ''
-      }
+      errorNotification: null,
+      usernameInput: "", 
+      userProfile: {
+        identifier: "",
+        displayName: "",
+      },
     };
   },
   methods: {
-    async fetchDefaultImage() {
+    async fetchDefaultAvatar() {
       try {
-        const res = await fetch('/nopfp.jpg');
-        const blob = await res.blob();
-        return await this.toBase64(blob);
-      } catch (e) {
-        console.error('Failed to fetch default image:', e);
-        return null;
+          const imageResponse = await fetch('/nopfp.jpg');
+          const imageBlob = await imageResponse.blob();
+          const fileReader = new FileReader();
+          return new Promise((resolve, reject) => {
+              fileReader.onload = () => {
+                  const base64Data = fileReader.result.toString().split(',')[1];
+                  resolve(base64Data);
+              };
+              fileReader.onerror = reject;
+              fileReader.readAsDataURL(imageBlob);
+          });
+      } catch (fetchError) {
+          console.error('Unable to load default avatar:', fetchError);
+          return null;
       }
     },
-    toBase64(blob) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    },
-    async handleLogin() {
-      if (!this.userName.trim()) {
-        this.error = 'Name is required.';
+    async processLogin() {
+      if (this.usernameInput.trim() === "") {
+        this.errorNotification = "Please enter your username.";
         return;
       }
-
       try {
-        const defaultPhoto = await this.fetchDefaultImage();
-        const response = await this.$axios.post('/session', {
-          name: this.userName,
-          photo: defaultPhoto
+        const avatarData = await this.fetchDefaultAvatar();
+        const apiResponse = await this.$axios.post("/session", {
+          name: this.usernameInput,
+          photo: avatarData,
         }, {
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
-
-        const id = response.data.identifier;
-        if (!id) {
-          throw new Error('Missing identifier in response.');
-        }
-
-        this.identity.token = id;
-        this.identity.displayName = this.userName;
-
-        localStorage.setItem('token', id);
-        localStorage.setItem('name', this.userName);
-
-        this.$router.push('/home');
-      } catch (err) {
-        if (err.response?.status === 400) {
-          this.error = 'Please fill in the name correctly.';
-        } else if (err.response?.status === 500) {
-          this.error = 'Server error occurred.';
+        if (apiResponse.data.identifier) {
+          this.userProfile.identifier = apiResponse.data.identifier;
+          this.userProfile.displayName = this.usernameInput; 
         } else {
-          this.error = err.message || 'Login failed.';
+          throw new Error("Invalid server response. Missing user identifier.");
+        }
+        localStorage.setItem("token", this.userProfile.identifier);
+        localStorage.setItem("name", this.userProfile.displayName);
+        this.$router.push({ path: "/home" });
+      } catch (apiError) {
+        if (apiError.response && apiError.response.status === 400) {
+          this.errorNotification =
+            "Please verify all fields and try again.";
+        } else if (apiError.response && apiError.response.status === 500) {
+          this.errorNotification =
+            "Server error occurred. Please try again later.";
+        } else {
+          this.errorNotification = apiError.toString();
         }
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
+<template>
+  <div class="auth-panel">
+    <h1 class="app-welcome">Welcome to WASAText Messenger</h1>
+    <div class="input-section">
+      <input
+        type="text"
+        id="username-field"
+        v-model="usernameInput"
+        class="username-input"
+        placeholder="Enter your username to access WASAText"
+        @keyup.enter="processLogin"
+      />
+      <button class="auth-button" type="button" @click="processLogin">Enter</button>
+    </div>
+    <ErrorMsg v-if="errorNotification" :msg="errorNotification"></ErrorMsg>
+  </div>
+</template>
+
 <style scoped>
-.login-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem;
-}
-
-.login-box {
-  background: #f5f8fa;
-  padding: 2rem;
-  border-radius: 10px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+.auth-panel {
+  max-width: 420px;
+  margin: 80px auto;
   text-align: center;
+  padding: 30px;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
-.welcome-text {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  color: #333;
+.app-welcome {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #2c3e50;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.form-section {
+.input-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  align-items: center;
+  gap: 12px;
 }
 
-.name-input {
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
+.username-input {
+  padding: 12px 16px;
+  width: 100%;
+  margin-bottom: 8px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.username-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.auth-button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
 }
 
-.submit-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 6px;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.2s ease;
+.auth-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.submit-btn:hover {
-  background-color: #0056b3;
+.auth-button:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  .auth-panel {
+    margin: 40px 20px;
+    padding: 24px;
+  }
+  
+  .app-welcome {
+    font-size: 22px;
+  }
 }
 </style>
