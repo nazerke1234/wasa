@@ -79,7 +79,7 @@ export default {
           this.$router.push({ path: "/" });
           return;
         }
-        const apiResponse = await this.$axios.get("/conversations", {
+        const apiResponse = await this.$axios.get("/chats", {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
@@ -95,7 +95,7 @@ export default {
     openChat(chatId, chatTitle) {
       localStorage.setItem("conversationName", chatTitle);
       this.$router.push({
-        path: `/conversations/${chatId}`,
+        path: `/chats/${chatId}`,
       });
     },
     shortenText(content, maxLength = 50, suffix = '...') {
@@ -295,4 +295,5 @@ export default {
   }
 }
 </style>
+
 
