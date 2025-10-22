@@ -76,7 +76,7 @@
   import LoadingIndicator from "../components/LoadingSpinner.vue";
   
   export default {
-    name: "NewGroupForm",
+    name: "CreateGroupView",
     components: {
       LoadingIndicator,
     },
@@ -334,3 +334,4 @@
   }
 }
   </style>
+
