@@ -129,7 +129,7 @@
 <script>
 import axios from "../services/axios";
 export default {
-  name: "MessageInterface",
+  name: "ChatView",
   data() {
     return {
       newMessage: "",
@@ -652,3 +652,4 @@ export default {
   }
 }
 </style>
+
