@@ -103,13 +103,13 @@ export default {
       localStorage.setItem("conversationName", recipientDisplayName);
       const senderIdentifier = localStorage.getItem("token");
       try {
-        const apiResponse = await axios.post(`/conversations`, { 
+        const apiResponse = await axios.post(`/chats`, { 
           senderId: senderIdentifier, 
           recipientId: recipientIdentifier 
         });
         const chatId = apiResponse.data.conversationId;
         this.$router.push({
-          path: `/conversations/${chatId}`
+          path: `/chats/${chatId}`
         });
       } catch (apiError) {
         console.error("Error initiating conversation:", apiError);
@@ -352,4 +352,5 @@ export default {
   }
 }
 </style>
+
 
