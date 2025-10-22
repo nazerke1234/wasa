@@ -172,7 +172,7 @@ export default {
       if (this.chosenMedia) {
         dataForm.append("attachment", this.chosenMedia);
       }
-      await axios.post(`/conversations/${this.chatId}/message`, dataForm, {
+      await axios.post(`/chats/${this.chatId}/message`, dataForm, {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       this.newMessage = "";
@@ -190,7 +190,7 @@ export default {
         this.$router.push({ path: "/" });
         return;
       }
-      const result = await axios.get(`/conversations/${this.chatId}`, {
+      const result = await axios.get(`/chats/${this.chatId}`, {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       this.messageList = (result.data.messages || []).map(message => ({
@@ -226,11 +226,11 @@ export default {
       const userReacted = (message.reactingUserNames || []).includes(this.currentUserName);
       try {
         if (userReacted) {
-          await axios.delete(`/conversations/${this.chatId}/message/${message.id}/comment`, {
+          await axios.delete(`/chats/${this.chatId}/message/${message.id}/comment`, {
             headers: { Authorization: `Bearer ${authToken}` }
           });
         } else {
-          await axios.post(`/conversations/${this.chatId}/message/${message.id}/comment`, {},
+          await axios.post(`/chats/${this.chatId}/message/${message.id}/comment`, {},
             { headers: { Authorization: `Bearer ${authToken}` } }
           );
         }
@@ -246,7 +246,7 @@ export default {
         this.$router.push({ path: "/" });
         return;
       }
-      await axios.delete(`/conversations/${this.chatId}/message/${message.id}`, {
+      await axios.delete(`/chats/${this.chatId}/message/${message.id}`, {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       this.messageList = this.messageList.filter(m => m.id !== message.id);
@@ -289,7 +289,7 @@ export default {
     },
     async loadAvailableChats(messageId) {
       const authToken = localStorage.getItem("token");
-      const result = await axios.get('/conversations', {
+      const result = await axios.get('/chats', {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       const chats = result.data.filter(chat => chat.id !== this.chatId);
@@ -320,14 +320,14 @@ export default {
         return;
       }
       const chatResult = await axios.post(
-        `/conversations`,
+        `/chats`,
         { senderId: authToken, recipientId: selectedContactId },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
       const destinationChatId = chatResult.data.conversationId;
       const sharerName = localStorage.getItem("name") || "Unknown";
       await axios.post(
-        `/conversations/${this.chatId}/message/${messageId}/forward`,
+        `/chats/${this.chatId}/message/${messageId}/forward`,
         { sourceMessageId: messageId, targetConversationId: destinationChatId, forwarderName: sharerName },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
@@ -340,7 +340,7 @@ export default {
       const authToken = localStorage.getItem("token");
       const sharerName = localStorage.getItem("name") || "Unknown";
       await axios.post(
-        `/conversations/${this.chatId}/message/${messageId}/forward`,
+        `/chats/${this.chatId}/message/${messageId}/forward`,
         { targetConversationId: targetChatId, forwarderName: sharerName },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
@@ -652,4 +652,5 @@ export default {
   }
 }
 </style>
+
 
