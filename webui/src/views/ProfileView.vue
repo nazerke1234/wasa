@@ -55,7 +55,7 @@ import axios from "../services/axios";
 import ErrorMsg from "../components/ErrorMsg.vue";
 
 export default {
-  name: "UserProfile",
+  name: "ProfileView",
   components: {
     ErrorMsg,
   },
@@ -361,3 +361,4 @@ export default {
   }
 }
 </style>
+
