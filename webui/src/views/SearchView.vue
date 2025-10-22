@@ -58,7 +58,7 @@ import axios from "../services/axios";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 
 export default {
-  name: "UserSearchView",
+  name: "SearchView",
   components: {
     LoadingSpinner,
   },
@@ -352,3 +352,4 @@ export default {
   }
 }
 </style>
+
