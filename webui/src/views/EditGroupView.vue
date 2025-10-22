@@ -69,7 +69,7 @@ import axios from "../services/axios";
 import ErrorDisplay from "../components/ErrorMsg.vue";
 
 export default {
-  name: "GroupSettingsPanel",
+  name: "EditGroupView",
   components: {
     ErrorDisplay,
   },
@@ -370,3 +370,4 @@ button:hover:not(:disabled) {
   background-color: #0056b3;
 }
 </style>
+
