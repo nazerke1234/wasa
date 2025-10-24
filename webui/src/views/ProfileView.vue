@@ -131,9 +131,16 @@ export default {
         localStorage.setItem("name", this.updatedUsername);
         this.userDisplayName = response.data.name;
         this.updatedUsername = response.data.name;
+        this.errorMessage = null;
       } catch (error) {
         console.error("Unable to update display name:", error);
-        this.errorMessage = "Unable to update display name. Please try again.";
+        if (error.response && error.response.status === 409) {
+          this.errorMessage = "This username is already taken. Please choose a different one.";
+        } else if (error.response && error.response.status === 400) {
+          this.errorMessage = "Invalid username. Must be 3-16 characters and contain only letters, numbers, and underscores.";
+        } else {
+          this.errorMessage = "Unable to update display name. Please try again.";
+        }
       }
     },
     reloadProfile() {
@@ -361,4 +368,5 @@ export default {
   }
 }
 </style>
+
 
