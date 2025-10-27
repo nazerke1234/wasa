@@ -139,7 +139,7 @@ export default {
         } else if (error.response && error.response.status === 400) {
           this.errorMessage = "Invalid username. Must be 3-16 characters and contain only letters, numbers, and underscores.";
         } else {
-          this.errorMessage = "Unable to update display name. Please try again.";
+          this.errorMessage = "Failed to update username. Please try again.";
         }
       }
     },
@@ -368,5 +368,6 @@ export default {
   }
 }
 </style>
+
 
 
