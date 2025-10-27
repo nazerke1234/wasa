@@ -13,7 +13,7 @@ const routes = [
   { path: "/", component: LoginView },
   { path: "/home", component: HomeView },
   { path: "/search", component: SearchView },
-  { path: "/conversations/:uuid", name: "ChatView", component: ChatView, props: true },
+  { path: "/chats/:uuid", name: "ChatView", component: ChatView, props: true },
   { path: "/me", component: ProfileView},
   { path: "/groups", component: GroupView},
   { path: "/new-group", component: CreateGroupView},
@@ -24,5 +24,6 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes,
 });
+
 
 export default router;
