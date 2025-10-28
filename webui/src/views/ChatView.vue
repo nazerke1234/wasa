@@ -328,7 +328,7 @@ export default {
       const sharerName = localStorage.getItem("name") || "Unknown";
       await axios.post(
         `/chats/${this.chatId}/message/${messageId}/forward`,
-        { sourceMessageId: messageId, targetConversationId: destinationChatId, forwarderName: sharerName },
+        { sourceMessageId: messageId, targetChatId: destinationChatId, forwarderName: sharerName },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
       alert("Message shared successfully!");
@@ -341,7 +341,7 @@ export default {
       const sharerName = localStorage.getItem("name") || "Unknown";
       await axios.post(
         `/chats/${this.chatId}/message/${messageId}/forward`,
-        { targetConversationId: targetChatId, forwarderName: sharerName },
+        { targetChatId: targetChatId, forwarderName: sharerName },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
       alert("Message shared successfully!");
@@ -652,5 +652,6 @@ export default {
   }
 }
 </style>
+
 
 
