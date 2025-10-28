@@ -25,13 +25,13 @@ export default {}
 						<li class="nav-item">
 							<RouterLink to="/home" class="nav-link">
 								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#home"/></svg>
-								Chats
+								My Conversations
 							</RouterLink>
 						</li>
 						<li class="nav-item">
 							<RouterLink to="/me" class="nav-link">
 								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#layout"/></svg>
-								Profile
+								My Profile
 							</RouterLink>
 						</li>
 						<li class="nav-item">
