@@ -321,10 +321,10 @@ export default {
       }
       const chatResult = await axios.post(
         `/chats`,
-        { senderId: authToken, recipientId: selectedContactId },
+        { senderId: currentUserId, recipientId: selectedContactId },
         { headers: { Authorization: `Bearer ${authToken}` } }
       );
-      const destinationChatId = chatResult.data.conversationId;
+      const destinationChatId = chatResult.data.chatId;
       const sharerName = localStorage.getItem("name") || "Unknown";
       await axios.post(
         `/chats/${this.chatId}/message/${messageId}/forward`,
@@ -652,6 +652,7 @@ export default {
   }
 }
 </style>
+
 
 
 
