@@ -1,126 +1,126 @@
 <template>
-  <div class="message-interface">
-    <div class="message-header">
-      <div class="header-image" v-if="chatImage">
-        <img :src="'data:image/jpeg;base64,' + chatImage" alt="Chat Image" />
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="chat-photo" v-if="conversationPhoto">
+        <img :src="'data:image/jpeg;base64,' + conversationPhoto" alt="Chat Thumbnail" />
       </div>
-      <h3>{{ chatTitle }}</h3>
+      <h3>{{ convName }}</h3>
     </div>
-    <div class="message-list" ref="messageList">
-      <p v-if="messageList.length === 0">No messages available...</p>
+    <div class="chat-messages" ref="chatMessages">
+      <p v-if="messages.length === 0">No messages yet...</p>
       <div
-        v-for="msg in messageList"
-        :key="msg.id"
-        class="message-item"
-        :class="msg.senderId === currentUserToken ? 'own' : 'others'"
-        :style="msg.senderId !== currentUserToken && chatCategory === 'group' ? { paddingLeft: '45px' } : {}"
+        v-for="message in messages"
+        :key="message.id"
+        class="message"
+        :class="message.senderId === userToken ? 'self' : 'other'"
+        :style="message.senderId !== userToken && conversationType === 'group' ? { paddingLeft: '45px' } : {}"
       >
-        <div v-if="chatCategory === 'group' && msg.senderId !== currentUserToken" class="user-avatar">
-          <img :src="'data:image/jpeg;base64,' + msg.senderPhoto" alt="User Avatar" />
+        <div v-if="conversationType === 'group' && message.senderId !== userToken" class="sender-thumbnail">
+          <img :src="'data:image/jpeg;base64,' + message.senderPhoto" alt="Sender Photo" />
         </div>
-        <div class="message-body">
-          <div v-if="msg.replyTo" class="response-preview">
-            <small>Response to {{ msg.replySenderName || 'Unknown' }}: {{ msg.replyContent }}</small>
+        <div class="message-content">
+          <div v-if="message.replyTo" class="reply-preview">
+            <small>Replying to {{ message.replySenderName || 'Unknown' }}: {{ message.replyContent }}</small>
             <img
-              v-if="msg.replyAttachment"
-              :src="'data:image/jpeg;base64,' + msg.replyAttachment"
-              alt="Response Attachment"
-              class="response-image"
+              v-if="message.replyAttachment"
+              :src="'data:image/jpeg;base64,' + message.replyAttachment"
+              alt="Reply Attachment"
+              class="reply-attachment"
             />
           </div>
-          <p v-if="msg.content.startsWith('<strong>Forwarded')" v-html="msg.content"></p>
+          <p v-if="message.content.startsWith('<strong>Forwarded')" v-html="message.content"></p>
           <p v-else>
             <strong>
-              {{ msg.senderId === currentUserToken ? 'You' : (msg.senderName || 'Unknown User') }}:
+              {{ message.senderId === userToken ? 'You' : (message.senderName || 'Unknown Sender') }}:
             </strong>
-            {{ msg.content }}
+            {{ message.content }}
           </p>
-          <div v-if="msg.attachment" class="media-container">
-            <img :src="'data:image/jpeg;base64,' + msg.attachment" alt="Media" class="media-display" />
+          <div v-if="message.attachment" class="attachment-container">
+            <img :src="'data:image/jpeg;base64,' + message.attachment" alt="Attachment" class="attachment-image" />
           </div>
-          <small>{{ formatTime(msg.timestamp) }}</small>
-          <div v-if="msg.reactionCount > 0" class="emoji-count">
-            ❤️ × {{ msg.reactionCount }}
-            <div class="emoji-users">
+          <small>{{ formatTimestamp(message.timestamp) }}</small>
+          <div v-if="message.reactionCount > 0" class="reaction-count">
+            ❤️ × {{ message.reactionCount }}
+            <div class="reactors-list">
               <ul>
-                <li v-for="(user, index) in msg.reactingUserNames" :key="user">
-                  {{ index + 1 }}. {{ user }}
+                <li v-for="(reactor, idx) in message.reactingUserNames" :key="reactor">
+                  {{ idx + 1 }}. {{ reactor }}
                 </li>
               </ul>
             </div>
           </div>
-          <div class="interaction-buttons">
-            <button v-if="msg.senderId !== currentUserToken" class="interaction-btn response-btn" @click.stop="setupResponse(msg)">
+          <div class="action-buttons">
+            <button v-if="message.senderId !== userToken" class="action-button reply-button" @click.stop="setReply(message)">
               ↩
             </button>
             <button
-              v-if="msg.senderId !== currentUserToken"
-              class="interaction-btn emoji-btn"
-              :class="{ 'active-emoji': (msg.reactingUserNames || []).includes(currentUserName) }"
-              :disabled="msg.reactionLoading"
-              @click.stop="handleEmoji(msg)"
+              v-if="message.senderId !== userToken"
+              class="action-button heart-button"
+              :class="{ 'has-reacted': (message.reactingUserNames || []).includes(userName) }"
+              :disabled="message.reactionLoading"
+              @click.stop="toggleReaction(message)"
             >
               ❤️
             </button>
-            <button class="interaction-btn share-btn" @click.stop="displayShareMenu(msg.id)">
+            <button class="action-button forward-button" @click.stop="showForwardOptions(message.id)">
               →
             </button>
-            <button v-if="msg.senderId === currentUserToken" class="interaction-btn remove-btn" @click.stop="removeMessage(msg)">
+            <button v-if="message.senderId === userToken" class="action-button delete-button" @click.stop="deleteMessage(message)">
               ✖
             </button>
           </div>
-          <div v-if="messageSettings[msg.id]?.displayShareMenu" class="share-menu" @click.stop>
-            <select id="share-select" class="share-select" v-model="messageSettings[msg.id].chosenChatId">
-              <option value="" disabled>Choose chat</option>
-              <option v-for="chat in messageSettings[msg.id].availableChats" :key="chat.id" :value="chat.id">
-                {{ chat.name }}
+          <div v-if="messageOptions[message.id]?.showForwardMenu" class="forward-options" @click.stop>
+            <select id="forward-select" class="forward-select" v-model="messageOptions[message.id].selectedConversationId">
+              <option value="" disabled>Select conversation</option>
+              <option v-for="conv in messageOptions[message.id].forwardConversations" :key="conv.id" :value="conv.id">
+                {{ conv.name }}
               </option>
               <option value="new">New contact</option>
             </select>
-            <div v-if="messageSettings[msg.id].chosenChatId === 'new'" class="find-contact">
-              <input type="text" v-model="messageSettings[msg.id].contactSearch" placeholder="Enter contact name" @input="findContact(msg.id)" />
-              <ul v-if="messageSettings[msg.id].contactMatches.length > 0" class="contact-matches">
-                <li v-for="contact in messageSettings[msg.id].contactMatches" :key="contact.id" @click="pickContact(contact, msg.id)" class="contact-match">
+            <div v-if="messageOptions[message.id].selectedConversationId === 'new'" class="contact-search">
+              <input type="text" v-model="messageOptions[message.id].contactQuery" placeholder="Enter contact name" @input="searchContact(message.id)" />
+              <ul v-if="messageOptions[message.id].contactResults.length > 0" class="contact-results">
+                <li v-for="contact in messageOptions[message.id].contactResults" :key="contact.id" @click="selectContact(contact, message.id)" class="contact-result">
                   {{ contact.name }}
                 </li>
               </ul>
             </div>
-            <div class="share-actions">
-              <button class="action-btn" v-if="messageSettings[msg.id].chosenChatId !== 'new'" :disabled="!messageSettings[msg.id].chosenChatId" @click.stop="shareMessage(messageSettings[msg.id].chosenChatId, msg.id)">
-                Share
+            <div class="forward-buttons-container">
+              <button class="button-style" v-if="messageOptions[message.id].selectedConversationId !== 'new'" :disabled="!messageOptions[message.id].selectedConversationId" @click.stop="forwardMessage(messageOptions[message.id].selectedConversationId, message.id)">
+                Send
               </button>
-              <button class="action-btn" v-if="messageSettings[msg.id].chosenChatId === 'new'" :disabled="!messageSettings[msg.id].pickedContactId" @click.stop="shareToContact(messageSettings[msg.id].pickedContactId, msg.id)">
-                Share
+              <button class="button-style" v-if="messageOptions[message.id].selectedConversationId === 'new'" :disabled="!messageOptions[message.id].selectedContactId" @click.stop="forwardToContact(messageOptions[message.id].selectedContactId, message.id)">
+                Send
               </button>
-              <button class="action-btn" @click.stop="hideShareMenu(msg.id)">Close</button>
+              <button class="button-style" @click.stop="closeForwardMenu(message.id)">Cancel</button>
             </div>
-            <div v-if="messageSettings[msg.id].availableChats.length === 0">
-              No chats available.
+            <div v-if="messageOptions[message.id].forwardConversations.length === 0">
+              No conversation found.
             </div>
           </div>
         </div>
-        <div class="message-state" v-if="msg.status && msg.senderId !== currentUserToken">
-          {{ msg.status }}
+        <div class="message-status" v-if="message.status && message.senderId !== userToken">
+          {{ message.status }}
         </div>
       </div>
     </div>
-    <div v-if="responseMessage" class="response-preview-box">
-      <div class="response-info">
-        <strong>Responding to {{ responseMessage.senderName || 'Unknown' }}:</strong>
-        <span class="response-text">{{ responseMessage.content }}</span>
-        <img v-if="responseMessage.attachment" :src="'data:image/jpeg;base64,' + responseMessage.attachment" alt="Response Media" class="response-media-preview" />
+    <div v-if="replyToMessage" class="reply-preview-box">
+      <div class="reply-info">
+        <strong>Replying to {{ replyToMessage.senderName || 'Unknown' }}:</strong>
+        <span class="reply-text">{{ replyToMessage.content }}</span>
+        <img v-if="replyToMessage.attachment" :src="'data:image/jpeg;base64,' + replyToMessage.attachment" alt="Reply Attachment" class="reply-attachment-preview" />
       </div>
-      <button class="cancel-response-btn" @click="clearResponse">✖</button>
+      <button class="cancel-reply-button" @click="cancelReply">✖</button>
     </div>
-    <div class="message-composer">
-      <input type="file" ref="mediaInput" style="display: none" accept="image/*, .gif" @change="processMediaSelection" />
-      <button class="media-attach-btn" @click="activateMediaInput">
-        Add Media or GIF
-        <span v-if="chosenMedia" class="media-indicator">🖼️</span>
+    <div class="chat-input">
+      <input type="file" ref="fileInput" style="display: none" accept="image/*, .gif" @change="handleFileSelect" />
+      <button class="attach-button" @click="triggerFileInput">
+        Attach Image or GIF
+        <span v-if="selectedFile" class="file-icon">🖼️</span>
       </button>
-      <input v-model="newMessage" class="composer-input" type="text" placeholder="Write your message..." @input="updateSendButton" />
-      <button v-if="newMessage.trim() || chosenMedia" class="submit-btn" @click="submitMessage">
-        Submit
+      <input v-model="message" class="message-input" type="text" placeholder="Type a message..." @input="toggleSendButton" />
+      <button v-if="message.trim() || selectedFile" class="send-button" @click="sendMessage">
+        Send
       </button>
     </div>
   </div>
@@ -132,271 +132,268 @@ export default {
   name: "ChatView",
   data() {
     return {
-      newMessage: "",
-      messageList: [],
-      currentUserToken: localStorage.getItem("token"),
-      chatTitle: localStorage.getItem("conversationName") || "Unknown Chat",
-      chatImage: null,
-      chatCategory: null,
-      chatId: this.$route.params.uuid,
-      messageSettings: {},
-      chosenMedia: null,
-      pollingTimer: null,
-      initialLoad: true,
-      responseMessage: null
+      message: "",
+      messages: [],
+      userToken: localStorage.getItem("token"),
+      convName: localStorage.getItem("conversationName") || "Unknown User",
+      conversationPhoto: null,
+      conversationType: null,
+      conversationId: this.$route.params.uuid,
+      messageOptions: {},
+      selectedFile: null,
+      pollIntervalId: null,
+      firstLoad: true,
+      replyToMessage: null
     };
   },
   computed: {
-    currentUserName() {
+    userName() {
       return localStorage.getItem("name");
     }
   },
   methods: {
-    activateMediaInput() {
-      this.$refs.mediaInput.click();
+    triggerFileInput() {
+      this.$refs.fileInput.click();
     },
-    processMediaSelection(event) {
-      this.chosenMedia = event.target.files[0];
+    handleFileSelect(event) {
+      this.selectedFile = event.target.files[0];
     },
-    async submitMessage() {
-      const authToken = localStorage.getItem("token");
-      if (!authToken) {
+    async sendMessage() {
+      const token = localStorage.getItem("token");
+      if (!token) {
         this.$router.push({ path: "/" });
         return;
       }
-      const dataForm = new FormData();
-      dataForm.append("content", this.newMessage);
-      if (this.responseMessage) {
-        dataForm.append("replyTo", this.responseMessage.id);
+      const formData = new FormData();
+      formData.append("content", this.message);
+      if (this.replyToMessage) {
+        formData.append("replyTo", this.replyToMessage.id);
       }
-      if (this.chosenMedia) {
-        dataForm.append("attachment", this.chosenMedia);
+      if (this.selectedFile) {
+        formData.append("attachment", this.selectedFile);
       }
-      await axios.post(`/chats/${this.chatId}/message`, dataForm, {
-        headers: { Authorization: `Bearer ${authToken}` }
+      await axios.post(`/chats/${this.conversationId}/message`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      this.newMessage = "";
-      this.chosenMedia = null;
-      this.$refs.mediaInput.value = "";
-      this.responseMessage = null;
-      await this.loadMessages();
+      this.message = "";
+      this.selectedFile = null;
+      this.$refs.fileInput.value = "";
+      this.replyToMessage = null;
+      await this.fetchMessages();
       this.$nextTick(() => {
-        this.scrollToEnd();
+        this.forceScrollToBottom();
       });
     },
-    async loadMessages() {
-      const authToken = localStorage.getItem("token");
-      if (!authToken) {
+    async fetchMessages() {
+      const token = localStorage.getItem("token");
+      if (!token) {
         this.$router.push({ path: "/" });
         return;
       }
-      const result = await axios.get(`/chats/${this.chatId}`, {
-        headers: { Authorization: `Bearer ${authToken}` }
+      const response = await axios.get(`/chats/${this.conversationId}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      this.messageList = (result.data.messages || []).map(message => ({
-        ...message,
-        reactingUserNames: message.reactingUserNames || [],
-        showReactionUsers: false
+      this.messages = (response.data.messages || []).map(msg => ({
+        ...msg,
+        reactingUserNames: msg.reactingUserNames || [],
+        showReactedList: false
       }));
-      if (result.data.name) {
-        this.chatTitle = result.data.name;
+      if (response.data.name) {
+        this.convName = response.data.name;
       }
-      if (result.data.conversationPhoto && result.data.conversationPhoto.String) {
-        this.chatImage = result.data.conversationPhoto.String;
+      if (response.data.conversationPhoto && response.data.conversationPhoto.String) {
+        this.conversationPhoto = response.data.conversationPhoto.String;
       } else {
-        this.chatImage = null;
+        this.conversationPhoto = null;
       }
-      this.chatCategory = result.data.type || "direct";
+      this.conversationType = response.data.type || "direct";
       this.$nextTick(() => {
-        if (this.initialLoad) {
-          this.scrollToEnd();
-          this.initialLoad = false;
+        if (this.firstLoad) {
+          this.forceScrollToBottom();
+          this.firstLoad = false;
         }
       });
     },
-    scrollToEnd() {
-      const messageArea = this.$refs.messageList;
-      if (messageArea) {
-        messageArea.scrollTop = messageArea.scrollHeight;
+    forceScrollToBottom() {
+      const chat = this.$refs.chatMessages;
+      if (chat) {
+        chat.scrollTop = chat.scrollHeight;
       }
     },
-    async handleEmoji(message) {
-      const authToken = localStorage.getItem("token");
-      if (!authToken || message.senderId === this.currentUserToken) return;
-      const userReacted = (message.reactingUserNames || []).includes(this.currentUserName);
+    async toggleReaction(message) {
+      const token = localStorage.getItem("token");
+      if (!token || message.senderId === this.userToken) return;
+      const hasReacted = (message.reactingUserNames || []).includes(this.userName);
       try {
-        if (userReacted) {
-          await axios.delete(`/chats/${this.chatId}/message/${message.id}/comment`, {
-            headers: { Authorization: `Bearer ${authToken}` }
+        if (hasReacted) {
+          await axios.delete(`/chats/${this.conversationId}/message/${message.id}/comment`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
         } else {
-          await axios.post(`/chats/${this.chatId}/message/${message.id}/comment`, {},
-            { headers: { Authorization: `Bearer ${authToken}` } }
+          await axios.post(`/chats/${this.conversationId}/message/${message.id}/comment`, {},
+            { headers: { Authorization: `Bearer ${token}` } }
           );
         }
-      } catch (error) {
-        console.error("Error handling emoji", error);
+      } catch (err) {
+        console.error("Error toggling reaction", err);
       } finally {
-        await this.loadMessages();
+        await this.fetchMessages();
       }
     },
-    async removeMessage(message) {
-      const authToken = localStorage.getItem("token");
-      if (!authToken) {
+    async deleteMessage(message) {
+      const token = localStorage.getItem("token");
+      if (!token) {
         this.$router.push({ path: "/" });
         return;
       }
-      await axios.delete(`/chats/${this.chatId}/message/${message.id}`, {
-        headers: { Authorization: `Bearer ${authToken}` }
+      await axios.delete(`/chats/${this.conversationId}/message/${message.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      this.messageList = this.messageList.filter(m => m.id !== message.id);
+      this.messages = this.messages.filter(m => m.id !== message.id);
     },
-    formatTime(timestamp) {
-      const dateObj = new Date(timestamp);
-      return dateObj.toLocaleString();
+    formatTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString();
     },
-    displayShareMenu(messageId) {
-      this.hideAllMenus();
-      if (!this.messageSettings[messageId]) {
-        this.messageSettings[messageId] = {
-          displayShareMenu: true,
-          availableChats: [],
-          chosenChatId: "",
-          contactSearch: "",
-          contactMatches: [],
-          pickedContactId: ""
+    showForwardOptions(messageId) {
+      this.closeAllMenus();
+      if (!this.messageOptions[messageId]) {
+        this.messageOptions[messageId] = {
+          showForwardMenu: true,
+          forwardConversations: [],
+          selectedConversationId: "",
+          contactQuery: "",
+          contactResults: [],
+          selectedContactId: ""
         };
-        this.loadAvailableChats(messageId);
+        this.fetchForwardConversations(messageId);
       } else {
-        this.messageSettings[messageId].displayShareMenu = !this.messageSettings[messageId].displayShareMenu;
+        this.messageOptions[messageId].showForwardMenu = !this.messageOptions[messageId].showForwardMenu;
       }
     },
-    hideShareMenu(messageId) {
-      if (this.messageSettings[messageId]) {
-        this.messageSettings[messageId].displayShareMenu = false;
+    closeForwardMenu(messageId) {
+      if (this.messageOptions[messageId]) {
+        this.messageOptions[messageId].showForwardMenu = false;
       }
     },
-    hideAllMenus() {
-      for (const id in this.messageSettings) {
-        this.messageSettings[id].displayShareMenu = false;
+    closeAllMenus() {
+      for (const id in this.messageOptions) {
+        this.messageOptions[id].showForwardMenu = false;
       }
     },
-    handleExternalClick(event) {
-      const messageBody = this.$el.querySelector('.message-body');
-      if (messageBody && !messageBody.contains(event.target)) {
-        this.hideAllMenus();
+    handleOutsideClick(event) {
+      const messageContent = this.$el.querySelector('.message-content');
+      if (messageContent && !messageContent.contains(event.target)) {
+        this.closeAllMenus();
       }
     },
-    async loadAvailableChats(messageId) {
-      const authToken = localStorage.getItem("token");
-      const result = await axios.get('/chats', {
-        headers: { Authorization: `Bearer ${authToken}` }
+    async fetchForwardConversations(messageId) {
+      const token = localStorage.getItem("token");
+      const response = await axios.get('/chats', {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      const chats = result.data.filter(chat => chat.id !== this.chatId);
-      this.messageSettings[messageId].availableChats = chats;
+      const conversations = response.data.filter(conv => conv.id !== this.conversationId);
+      this.messageOptions[messageId].forwardConversations = conversations;
     },
-    async findContact(messageId) {
-      const searchTerm = this.messageSettings[messageId].contactSearch;
-      if (!searchTerm.trim()) {
-        this.messageSettings[messageId].contactMatches = [];
+    async searchContact(messageId) {
+      const query = this.messageOptions[messageId].contactQuery;
+      if (!query.trim()) {
+        this.messageOptions[messageId].contactResults = [];
         return;
       }
-      const authToken = localStorage.getItem("token");
-      const result = await axios.get('/search', {
-        params: { username: searchTerm },
-        headers: { Authorization: `Bearer ${authToken}` }
+      const token = localStorage.getItem("token");
+      const response = await axios.get('/search', {
+        params: { username: query },
+        headers: { Authorization: `Bearer ${token}` }
       });
-      this.messageSettings[messageId].contactMatches = result.data;
+      this.messageOptions[messageId].contactResults = response.data;
     },
-    pickContact(contact, messageId) {
-      this.messageSettings[messageId].pickedContactId = contact.id;
-      this.messageSettings[messageId].contactSearch = contact.name;
-      this.messageSettings[messageId].contactMatches = [];
+    selectContact(contact, messageId) {
+      this.messageOptions[messageId].selectedContactId = contact.id;
+      this.messageOptions[messageId].contactQuery = contact.name;
+      this.messageOptions[messageId].contactResults = [];
     },
-    async shareToContact(selectedContactId, messageId) {
-      const authToken = localStorage.getItem("token");
-      if (!authToken) {
+    async forwardToContact(selectedContactId, messageId) {
+      const token = localStorage.getItem("token");
+      if (!token) {
         this.$router.push({ path: "/" });
         return;
       }
-      const chatResult = await axios.post(
+      const conversationResponse = await axios.post(
         `/chats`,
-        { senderId: currentUserId, recipientId: selectedContactId },
-        { headers: { Authorization: `Bearer ${authToken}` } }
+        { senderId: token, recipientId: selectedContactId },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      const destinationChatId = chatResult.data.chatId;
-      const sharerName = localStorage.getItem("name") || "Unknown";
+      const targetConversationId = conversationResponse.data.conversationId;
+      const forwarderName = localStorage.getItem("name") || "Unknown";
       await axios.post(
-        `/chats/${this.chatId}/message/${messageId}/forward`,
-        { sourceMessageId: messageId, targetChatId: destinationChatId, forwarderName: sharerName },
-        { headers: { Authorization: `Bearer ${authToken}` } }
+        `/chats/${this.conversationId}/message/${messageId}/forward`,
+        { sourceMessageId: messageId, targetConversationId: targetConversationId, forwarderName: forwarderName },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Message shared successfully!");
-      this.hideShareMenu(messageId);
+      alert("Message forwarded successfully!");
+      this.closeForwardMenu(messageId);
     },
-    async shareMessage(targetChatId, messageId) {
-      const message = this.messageList.find(m => m.id === messageId);
+    async forwardMessage(targetConversationId, messageId) {
+      const message = this.messages.find(m => m.id === messageId);
       if (!message) return;
-      const authToken = localStorage.getItem("token");
-      const sharerName = localStorage.getItem("name") || "Unknown";
+      const token = localStorage.getItem("token");
+      const forwarderName = localStorage.getItem("name") || "Unknown";
       await axios.post(
-        `/chats/${this.chatId}/message/${messageId}/forward`,
-        { targetChatId: targetChatId, forwarderName: sharerName },
-        { headers: { Authorization: `Bearer ${authToken}` } }
+        `/chats/${this.conversationId}/message/${messageId}/forward`,
+        { targetConversationId: targetConversationId, forwarderName: forwarderName },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Message shared successfully!");
-      this.hideShareMenu(messageId);
+      alert("Message forwarded successfully!");
+      this.closeForwardMenu(messageId);
     },
-    setupResponse(message) {
-      this.responseMessage = message;
+    setReply(message) {
+      this.replyToMessage = message;
     },
-    clearResponse() {
-      this.responseMessage = null;
-    },
-    updateSendButton() {
-      // Method for future send button state updates
+    cancelReply() {
+      this.replyToMessage = null;
     }
   },
   mounted() {
-    this.loadMessages();
-    this.pollingTimer = setInterval(() => {
-      this.loadMessages();
+    this.fetchMessages();
+    this.pollIntervalId = setInterval(() => {
+      this.fetchMessages();
     }, 5000);
-    document.addEventListener("click", this.handleExternalClick);
+    document.addEventListener("click", this.handleOutsideClick);
   },
   beforeUnmount() {
-    document.removeEventListener("click", this.handleExternalClick);
-    clearInterval(this.pollingTimer);
+    document.removeEventListener("click", this.handleOutsideClick);
+    clearInterval(this.pollIntervalId);
   }
 };
 </script>
 
 <style scoped>
-.message-interface {
+.chat-container {
   display: flex;
   flex-direction: column;
   height: 92vh;
   overflow: hidden;
 }
-.message-header {
+.chat-header {
   display: flex;
   align-items: center;
   padding: 15px;
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
 }
-.header-image {
+.chat-photo {
   width: 40px;
   height: 40px;
   margin-right: 10px;
 }
-.header-image img {
+.chat-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-.message-list {
+.chat-messages {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -405,7 +402,7 @@ export default {
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 }
-.message-item {
+.message {
   position: relative;
   max-width: 70%;
   margin-bottom: 10px;
@@ -413,39 +410,39 @@ export default {
   padding: 10px;
   background-color: #e0f2f1;
 }
-.message-item.own {
+.message.self {
   margin-left: auto;
   background-color: #d1e7dd;
 }
-.user-avatar {
+.sender-thumbnail {
   position: absolute;
   left: 10px;
   top: 10px;
   width: 30px;
   height: 30px;
 }
-.user-avatar img {
+.sender-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-.message-body {
+.message-content {
   position: relative;
   min-height: 40px;
 }
-.message-item p {
+.message p {
   margin: 0;
   color: #333;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
-.message-item small {
+.message small {
   margin-top: 5px;
   color: #666;
   font-size: 0.8em;
 }
-.media-container {
+.attachment-container {
   margin-top: 8px;
   width: 300px;
   height: 300px;
@@ -453,12 +450,12 @@ export default {
   border: 1px solid #ddd;
   border-radius: 8px;
 }
-.media-display {
+.attachment-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.interaction-buttons {
+.action-buttons {
   position: absolute;
   top: 0;
   right: -50px;
@@ -466,11 +463,11 @@ export default {
   flex-direction: column;
   gap: 5px;
 }
-.message-item.own .interaction-buttons {
+.message.self .action-buttons {
   left: -50px;
   right: auto;
 }
-.interaction-btn {
+.action-button {
   position: static;
   width: 17px;
   height: 17px;
@@ -486,14 +483,14 @@ export default {
   font-size: 10px;
   padding: 0;
 }
-.interaction-btn:hover {
+.action-button:hover {
   opacity: 1;
 }
-.response-btn {
+.reply-button {
   font-size: 10px;
   margin-right: 5px;
 }
-.share-menu {
+.forward-options {
   position: absolute;
   top: 30px;
   right: 0;
@@ -504,7 +501,7 @@ export default {
   z-index: 100;
   width: 250px;
 }
-.share-select {
+.forward-select {
   width: 100%;
   padding: 8px;
   border: 1px solid #dee2e6;
@@ -512,13 +509,13 @@ export default {
   margin-bottom: 8px;
   font-size: 14px;
 }
-.share-actions {
+.forward-buttons-container {
   display: flex;
   gap: 10px;
   justify-content: center;
   margin-top: 10px;
 }
-.action-btn {
+.button-style {
   background-color: #128c7e;
   border: none;
   padding: 8px 16px;
@@ -526,18 +523,18 @@ export default {
   cursor: pointer;
   font-size: 14px;
 }
-.action-btn:disabled {
+.button-style:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
-.find-contact input {
+.contact-search input {
   width: 100%;
   padding: 6px;
   margin-bottom: 4px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-.contact-matches {
+.contact-results {
   list-style: none;
   padding: 0;
   margin: 0 0 6px 0;
@@ -546,36 +543,36 @@ export default {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-.contact-match {
+.contact-result {
   padding: 4px;
   cursor: pointer;
   border-bottom: 1px solid #eee;
 }
-.contact-match:hover {
+.contact-result:hover {
   background-color: #f0f0f0;
 }
-.media-indicator {
+.file-icon {
   font-size: 18px;
   margin-left: 5px;
 }
-.message-state {
+.message-status {
   position: absolute;
   bottom: 5px;
   right: 10px;
   font-size: 12px;
   color: #555;
 }
-.emoji-users ul {
+.reactors-list ul {
   margin: 0;
   padding: 0;
   list-style: none;
   font-size: 0.8em;
   color: #444;
 }
-.emoji-users li {
+.reactors-list li {
   margin: 2px 0;
 }
-.response-preview-box {
+.reply-preview-box {
   background-color: #f0f0f0;
   border-left: 4px solid #128c7e;
   padding: 8px;
@@ -584,33 +581,33 @@ export default {
   justify-content: space-between;
   align-items: center;
 }
-.response-info {
+.reply-info {
   font-size: 0.9em;
   color: #444;
 }
-.response-image,
-.response-media-preview {
+.reply-attachment,
+.reply-attachment-preview {
   width: 21px;
   height: 21px;
   object-fit: cover;
   margin-left: 10px;
   border-radius: 4px;
 }
-.cancel-response-btn {
+.cancel-reply-button {
   background: none;
   border: none;
   font-size: 18px;
   cursor: pointer;
   color: #888;
 }
-.message-composer {
+.chat-input {
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
   padding: 10px;
   gap: 8px;
 }
-.media-attach-btn {
+.attach-button {
   background-color: #25d366;
   color: white;
   border: none;
@@ -620,10 +617,10 @@ export default {
   font-size: 14px;
   padding: 10px 15px;
 }
-.media-attach-btn:hover {
+.attach-button:hover {
   background-color: #20b358;
 }
-.composer-input {
+.message-input {
   flex: 1;
   min-width: 200px;
   padding: 12px;
@@ -632,7 +629,7 @@ export default {
   font-size: 14px;
   outline: none;
 }
-.submit-btn {
+.send-button {
   background-color: #128c7e;
   color: white;
   border: none;
@@ -642,7 +639,7 @@ export default {
   cursor: pointer;
   font-size: 14px;
 }
-.submit-btn:hover {
+.send-button:hover {
   background-color: #0f7c6a;
 }
 @media (max-width: 600px) {
@@ -652,7 +649,3 @@ export default {
   }
 }
 </style>
-
-
-
-
