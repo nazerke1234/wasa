@@ -1,51 +1,50 @@
 <template>
   <div>
-    <div class="profile-header-section">
-      <h1 class="profile-title">{{ userDisplayName }}, your profile details</h1>
-      <div class="action-controls">
-        <div class="control-group">
-          <button type="button" class="control-btn secondary" @click="reloadProfile">Reload</button>
-          <button type="button" class="control-btn secondary" @click="signOut">Sign Out</button>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <h1 class="h2">{{ userName }}, here is your profile</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">Refresh</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">Log Out</button>
         </div>
-        <div class="control-group">
-          <button type="button" class="control-btn primary" @click="createGroup">Create Group</button>
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-primary" @click="newGroup">New group</button>
         </div>
       </div>
     </div>
     
-    <div class="profile-content">
-      <div class="profile-card">
-        <div class="avatar-section">
-          <img v-if="userAvatar" :src="userAvatar" alt="User Avatar" class="avatar-image" />
-          <div v-else class="avatar-placeholder">No Avatar</div>
+    <div class="profile-container">
+      <div class="profile-header">
+        <div class="photo-container">
+          <img v-if="userPhoto" :src="userPhoto" alt="User Photo" class="profile-photo" />
+          <p v-else class="no-photo-placeholder">No Photo</p>
         </div>
-        <div class="profile-details">
-          <h1 class="display-name">{{ userDisplayName }}</h1>
-          <div class="update-section">
+        <div class="username-container">
+          <h1 class="username">{{ userName }}</h1>
+          <div class="update-username-section">
             <input
-              v-model="updatedUsername"
-              placeholder="Enter new display name"
+              v-model="newUserName"
+              placeholder="Enter new username"
               maxlength="16"
               minlength="3"
-              class="name-input"
             />
             <button
-              class="update-btn"
-              @click="modifyUsername"
-              :disabled="!updatedUsername || updatedUsername === userDisplayName"
+              class="custom-button"
+              @click="updateUsername"
+              :disabled="!newUserName || newUserName === userName"
             >
-              Change Display Name
+              Update Username
             </button>
           </div>
-          <div class="avatar-update-section">
-            <input type="file" @change="processAvatarSelection" accept="image/*" class="file-input" />
-            <button class="update-btn" @click="modifyAvatar" :disabled="!newAvatarFile">
-              Update Avatar
+          <div class="update-photo-section">
+            <input type="file" @change="handlePhotoUpload" accept="image/*" />
+            <button class="custom-button" @click="updatePhoto" :disabled="!newPhoto">
+              Update Photo
             </button>
           </div>
         </div>
       </div>
-      <ErrorMsg v-if="errorMessage" :msg="errorMessage" />
+      <ErrorMsg v-if="errormsg" :msg="errormsg" />
     </div>
   </div>
 </template>
@@ -61,308 +60,183 @@ export default {
   },
   data() {
     return {
-      userDisplayName: "", 
-      userAvatar: null, 
-      updatedUsername: "", 
-      newAvatarFile: null, 
-      errorMessage: null, 
+      userName: "", 
+      userPhoto: null, 
+      newUserName: "", 
+      newPhoto: null, 
+      errormsg: null, 
     };
   },
   methods: {
-    async loadUserProfile() {
+    async fetchUserProfile() {
       try {
-        const authToken = localStorage.getItem("token");
-        if (!authToken) {
+        const token = localStorage.getItem("token");
+        if (!token) {
           this.$router.push({ path: "/" });
           return;
         }
         const response = await axios.get("/users/photo", {
           headers: {
-            Authorization: `Bearer ${authToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         const { photo } = response.data;
-        this.userDisplayName = localStorage.getItem("name");
-        this.userAvatar = photo ? `data:image/jpeg;base64,${photo}` : null;
+        this.userName = localStorage.getItem("name");
+        this.userPhoto = photo ? `data:image/jpeg;base64,${photo}` : null;
       } catch (error) {
-        console.error("Unable to load user profile:", error);
-        this.errorMessage = "Unable to load profile information. Please try again later.";
+        console.error("Failed to fetch user profile:", error);
+        this.errormsg = "Failed to load user profile. Please try again later.";
       }
     },
-    processAvatarSelection(event) {
-      const selectedFile = event.target.files[0];
-      if (selectedFile) {
-        this.newAvatarFile = selectedFile;
+    handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.newPhoto = file;
       }
     },
-    async modifyAvatar() {
-      if (!this.newAvatarFile) return;
+    async updatePhoto() {
+      if (!this.newPhoto) return;
       try {
-        const authToken = localStorage.getItem("token");
-        const imageData = new FormData();
-        imageData.append("photo", this.newAvatarFile);
-        await axios.put("/users/photo", imageData, {
+        const token = localStorage.getItem("token");
+        const formData = new FormData();
+        formData.append("photo", this.newPhoto);
+        await axios.put("/users/photo", formData, {
           headers: {
-            Authorization: `Bearer ${authToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
-        alert("Avatar updated successfully!");
-        this.newAvatarFile = null;
-        this.loadUserProfile();
+        alert("Photo updated successfully!");
+        this.newPhoto = null;
+        this.fetchUserProfile(); 
       } catch (error) {
-        console.error("Unable to update avatar:", error);
-        this.errorMessage = "Unable to update avatar. Please try again.";
+        console.error("Failed to update photo:", error);
+        this.errormsg = "Failed to update photo. Please try again.";
       }
     },
-    async modifyUsername() {
-      if (!this.updatedUsername || this.updatedUsername === this.userDisplayName) return;
+    async updateUsername() {
+      if (!this.newUserName || this.newUserName === this.userName) return;
       try {
-        const authToken = localStorage.getItem("token");
+        const token = localStorage.getItem("token");
         const response = await axios.put(
           "/users/name",
-          { name: this.updatedUsername },
+          { name: this.newUserName },
           {
             headers: {
-              Authorization: `Bearer ${authToken}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
-        alert("Display name updated successfully!");
-        localStorage.setItem("name", this.updatedUsername);
-        this.userDisplayName = response.data.name;
-        this.updatedUsername = response.data.name;
-        this.errorMessage = null;
+        alert("Username updated successfully!");
+        localStorage.setItem("name", this.newUserName);
+        this.userName = response.data.name;
+        this.newUserName = response.data.name;
       } catch (error) {
         console.error("Failed to update username:", error);
         this.errormsg = "Failed to update username. Please try again.";
       }
     },
-    reloadProfile() {
-      this.loadUserProfile();
+    refresh() {
+      this.fetchUserProfile();
     },
-    signOut() {
+    logOut() {
       localStorage.clear();
       this.$router.push({ path: "/" });
     },
-    createGroup() {
+    newGroup() {
       this.$router.push({ path: "/new-group" });
     }
   },
   mounted() {
-    this.loadUserProfile();
+    this.fetchUserProfile();
   },
 };
 </script>
 
 <style scoped>
-.profile-header-section {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  align-items: center;
-  padding-top: 1rem;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.profile-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.action-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.control-group {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.control-btn {
-  padding: 0.375rem 0.75rem;
-  border: 1px solid;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.control-btn.secondary {
-  background-color: transparent;
-  color: #6b7280;
-  border-color: #6b7280;
-}
-
-.control-btn.secondary:hover {
-  background-color: #6b7280;
-  color: white;
-}
-
-.control-btn.primary {
-  background-color: transparent;
-  color: #3b82f6;
-  border-color: #3b82f6;
-}
-
-.control-btn.primary:hover {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.profile-content {
+.profile-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.5rem;
+  padding: 20px;
 }
 
-.profile-card {
+.profile-header {
   display: flex;
   align-items: flex-start;
-  gap: 2rem;
+  gap: 20px;
   width: 100%;
   max-width: 800px;
-  background: #ffffff;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e9ecef;
 }
 
-.avatar-section {
-  width: 140px;
-  height: 140px;
+.photo-container {
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #e9ecef;
+  border: 1px solid #ccc;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  flex-shrink: 0;
+  background-color: #f5f5f5;
 }
 
-.avatar-image {
+.profile-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.avatar-placeholder {
-  color: #9ca3af;
-  font-size: 0.875rem;
-  font-weight: 500;
+.no-photo-placeholder {
+  color: #aaa;
+  font-size: 14px;
 }
 
-.profile-details {
+.username-container {
   flex: 1;
-  min-width: 0;
 }
 
-.display-name {
-  margin: 0 0 1.5rem 0;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.username {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
 }
 
-.update-section,
-.avatar-update-section {
-  margin-bottom: 1.5rem;
+.update-username-section,
+.update-photo-section {
+  margin-top: 10px;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.name-input,
-.file-input {
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
+input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
   flex: 1;
   max-width: 300px;
-  font-size: 0.875rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.name-input:focus,
-.file-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.update-btn {
-  padding: 0.75rem 1.5rem;
+.custom-button {
+  padding: 8px 16px;
   background-color: transparent;
-  border: 2px solid #3b82f6;
-  color: #3b82f6;
-  border-radius: 0.5rem;
+  border: 1px solid #007bff;
+  color: #007bff;
+  border-radius: 4px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 0.875rem;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-.update-btn:hover:not(:disabled) {
-  background-color: #3b82f6;
+.custom-button:hover:not(:disabled) {
+  background-color: #007bff;
   color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
-.update-btn:disabled {
-  border-color: #d1d5db;
-  color: #d1d5db;
+.custom-button:disabled {
+  border-color: #cccccc;
+  color: #cccccc;
   cursor: not-allowed;
   background-color: transparent;
-  transform: none;
-  box-shadow: none;
-}
-
-@media (max-width: 768px) {
-  .profile-header-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .action-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .profile-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1.5rem;
-  }
-  
-  .update-section,
-  .avatar-update-section {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .name-input,
-  .file-input {
-    max-width: none;
-  }
 }
 </style>
-
-
-
-
