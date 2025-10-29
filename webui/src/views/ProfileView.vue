@@ -133,14 +133,8 @@ export default {
         this.updatedUsername = response.data.name;
         this.errorMessage = null;
       } catch (error) {
-        console.error("Unable to update display name:", error);
-        if (error.response && error.response.status === 409) {
-          this.errorMessage = "This username is already taken. Please choose a different one.";
-        } else if (error.response && error.response.status === 400) {
-          this.errorMessage = "Invalid username. Must be 3-16 characters and contain only letters, numbers, and underscores.";
-        } else {
-          this.errorMessage = "Failed to update username. Please try again.";
-        }
+        console.error("Failed to update username:", error);
+        this.errormsg = "Failed to update username. Please try again.";
       }
     },
     reloadProfile() {
@@ -368,6 +362,7 @@ export default {
   }
 }
 </style>
+
 
 
 
