@@ -1,71 +1,71 @@
 <template>
-    <div class="new-group-form">
-      <h1 class="main-heading">Create New Group</h1>
-      <div class="input-container">
-        <label for="group-title">Group Title:</label>
+    <div class="group-create-container">
+      <h1 class="page-title">Create Group</h1>
+      <div class="form-group">
+        <label for="group-name">Group Name:</label>
         <input
-          id="group-title"
-          v-model="groupTitle"
-          class="text-input"
+          id="group-name"
+          v-model="groupName"
+          class="input-field"
           type="text"
-          placeholder="Enter group title"
+          placeholder="Enter group name"
         />
       </div>
-      <form @submit.prevent="findUsers" class="search-container">
+      <form @submit.prevent="searchUsers" class="search-form">
         <input
-          id="user-search"
-          v-model="searchTerm"
-          class="search-input"
+          id="username"
+          v-model="query"
+          class="search-box"
           type="text"
-          placeholder="Find users by username"
+          placeholder="Search by username"
         />
-        <button class="search-btn" type="submit">Find</button>
+        <button class="search-button" type="submit">Search</button>
       </form>
-      <div v-if="errorMessage" class="error-message">
-        {{ errorMessage }}
+      <div v-if="error" class="error-box">
+        {{ error }}
       </div>
-      <div v-if="isLoading">
-        <LoadingIndicator />
+      <div v-if="loading">
+        <LoadingSpinner />
       </div>
-      <div v-if="!isLoading && displayResults" class="results-container">
-        <h2 class="results-heading">Found Users:</h2>
-        <template v-if="foundUsers.length > 0">
-          <div v-for="user in foundUsers" :key="user.id" class="user-item">
-            <h5 class="user-username">@{{ user.name }}</h5>
+      <div v-if="!loading && showResults" class="results-section">
+        <h2 class="results-title">Search Results:</h2>
+        <template v-if="users.length > 0">
+          <div v-for="user in users" :key="user.id" class="user-card">
+            <h5 class="user-name">@{{ user.name }}</h5>
             <button
-              class="select-btn"
-              @click="includeUser(user)"
-              :disabled="isUserIncluded(user)"
+              class="add-button"
+              @click="addUserToGroup(user)"
+              :disabled="isUserAdded(user)"
             >
-              {{ isUserIncluded(user) ? 'Selected' : 'Select' }}
+              {{ isUserAdded(user) ? 'Added' : 'Add' }}
             </button>
           </div>
         </template>
         <template v-else>
-          <p class="empty-results">No users found for "{{ previousSearch }}"</p>
+          <p class="no-results">No users found matching "{{ lastQuery }}"</p>
         </template>
       </div>
-      <div v-if="includedUsers.length > 0" class="members-container">
-        <h2 class="members-heading">Group Members:</h2>
-        <div class="members-list">
-          <span v-for="user in includedUsers" :key="user.id" class="member-tag">
+      <div v-if="selectedUsers.length > 0" class="selected-users-section">
+        <h2 class="selected-title">Selected Members:</h2>
+        <div class="selected-users">
+          <span v-for="user in selectedUsers" :key="user.id" class="selected-user">
             @{{ user.name }}
-            <button @click="excludeUser(user)" class="deselect-btn">Remove</button>
+            <button @click="removeUserFromGroup(user)" class="remove-button">Remove</button>
           </span>
         </div>
       </div>
-      <div class="input-container">
-        <label for="group-picture">Group Picture:</label>
+      <div class="form-group">
+        <label for="group-image">Group Image:</label>
         <input
-          id="group-picture"
-          ref="imageInput"
+          id="group-image"
+          ref="fileInput"
           type="file"
-          @change="processImageSelection"
+          @change="handleImageUpload"
           accept="image/*"
         />
-        <img v-if="imagePreview" :src="imagePreview" class="preview-img" alt="Group picture preview"/>
+        <img v-if="previewImage" :src="previewImage" class="preview-image" alt="Group Image Preview"/>
       </div>
-      <button class="submit-btn" @click="submitGroup" :disabled="!isFormValid">
+      <button class="create-button" @click="createGroup" :disabled="!canCreateGroup">
         Create Group
       </button>
     </div>
@@ -73,142 +73,142 @@
 
   <script>
   import axios from "../services/axios";
-  import LoadingIndicator from "../components/LoadingSpinner.vue";
+  import LoadingSpinner from "../components/LoadingSpinner.vue";
   
   export default {
     name: "CreateGroupView",
     components: {
-      LoadingIndicator,
+      LoadingSpinner,
     },
     data() {
-      const authToken = localStorage.getItem("token");
-      if (!authToken) {
+      const token = localStorage.getItem("token");
+      if (!token) {
         this.$router.push({ path: "/" });
         return;
       }
       return {
-        groupTitle: "",
-        searchTerm: "",
-        previousSearch: "",
-        foundUsers: [],
-        isLoading: false,
-        displayResults: false,
-        errorMessage: "",
-        includedUsers: [],
-        imagePreview: null,
-        selectedImage: null,
+        groupName: "",
+        query: "",
+        lastQuery: "",
+        users: [],
+        loading: false,
+        showResults: false,
+        error: "",
+        selectedUsers: [],
+        previewImage: null,
+        file: null,
       };
     },
     computed: {
-      isFormValid() {
+      canCreateGroup() {
         return (
-          this.groupTitle.trim() !== "" &&
-          this.includedUsers.length > 0 &&
-          this.selectedImage !== null
+          this.groupName.trim() !== "" &&
+          this.selectedUsers.length > 0 &&
+          this.file !== null
         );
       },
     },
     methods: {
-      async findUsers() {
-        if (!this.searchTerm.trim()) {
-          this.errorMessage = "Please provide a valid search term.";
-          this.displayResults = false;
+      async searchUsers() {
+        if (!this.query.trim()) {
+          this.error = "Please enter a valid search query.";
+          this.showResults = false;
           return;
         }
-        this.isLoading = true;
-        this.errorMessage = "";
-        this.foundUsers = [];
-        this.displayResults = false;
+        this.loading = true;
+        this.error = "";
+        this.users = [];
+        this.showResults = false;
         try {
           const response = await axios.get(`/search`, {
-            params: { username: this.searchTerm },
+            params: { username: this.query },
           });
-          this.foundUsers = response.data.filter(user => user.id !== localStorage.getItem("token"));
-          this.previousSearch = this.searchTerm;
-          this.displayResults = true;
+          this.users = response.data.filter(user => user.id !== localStorage.getItem("token"));
+          this.lastQuery = this.query;
+          this.showResults = true;
         } catch (err) {
-          const errorCode = err.response?.status;
-          const errorDetails = err.response?.data?.message || "Unable to retrieve users.";
-          this.errorMessage = `Error ${errorCode}: ${errorDetails}`;
+          const status = err.response?.status;
+          const reason = err.response?.data?.message || "Failed to fetch users.";
+          this.error = `Status ${status}: ${reason}`;
         } finally {
-          this.isLoading = false;
+          this.loading = false;
         }
       },
-      includeUser(user) {
-        if (!this.isUserIncluded(user)) {
-          this.includedUsers.push(user);
+      addUserToGroup(user) {
+        if (!this.isUserAdded(user)) {
+          this.selectedUsers.push(user);
         }
       },
-      isUserIncluded(user) {
-        return this.includedUsers.some((u) => u.id === user.id);
+      isUserAdded(user) {
+        return this.selectedUsers.some((u) => u.id === user.id);
       },
-      excludeUser(user) {
-        this.includedUsers = this.includedUsers.filter((u) => u.id !== user.id);
+      removeUserFromGroup(user) {
+        this.selectedUsers = this.selectedUsers.filter((u) => u.id !== user.id);
       },
-      processImageSelection(event) {
-        const imageFile = event.target.files[0];
-        if (imageFile) {
-          this.selectedImage = imageFile;
-          const fileReader = new FileReader();
-          fileReader.onload = (e) => {
-            this.imagePreview = e.target.result;
+      handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+          this.file = file;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.previewImage = e.target.result;
           };
-          fileReader.readAsDataURL(imageFile);
+          reader.readAsDataURL(file);
         } else {
-          this.imagePreview = null;
-          this.selectedImage = null;
+          this.previewImage = null;
+          this.file = null;
         }
       },
-      async submitGroup() {
-        if (!this.isFormValid) {
-          alert("Please complete all required fields and choose a group image.");
+      async createGroup() {
+        if (!this.canCreateGroup) {
+          alert("Please fill in all required fields and select a group image.");
           return;
         }
-        this.isLoading = true;
-        this.errorMessage = "";
-        const formPayload = new FormData();
-        formPayload.append("name", this.groupTitle);
-        formPayload.append("image", this.selectedImage);
-        formPayload.append("members", JSON.stringify([...this.includedUsers.map(u => u.id), localStorage.getItem("token")]));
+        this.loading = true;
+        this.error = "";
+        const formData = new FormData();
+        formData.append("name", this.groupName);
+        formData.append("image", this.file);
+        formData.append("members", JSON.stringify([...this.selectedUsers.map(u => u.id), localStorage.getItem("token")]));
         try {
-          await axios.post(`/groups`, formPayload, {
+          await axios.post(`/groups`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           });
-          alert("Group successfully created!");
+          alert("Group created successfully!");
           this.$router.push(`/home`);
         } catch (err) {
-          const errorCode = err.response?.status;
-          const errorDetails = err.response?.data?.message || "Group creation failed.";
-          this.errorMessage = `Error ${errorCode}: ${errorDetails}`;
+          const status = err.response?.status;
+          const reason = err.response?.data?.message || "Failed to create group.";
+          this.error = `Status ${status}: ${reason}`;
         } finally {
-          this.isLoading = false;
+          this.loading = false;
         }
       },
     },
   };
   </script>
   <style scoped>
-  .new-group-form {
+  .group-create-container {
     text-align: center;
     padding: 20px;
     max-width: 600px;
     margin: 0 auto;
   }
   
-  .main-heading {
+  .page-title {
     font-size: 28px;
     font-weight: bold;
     margin-bottom: 20px;
     color: #333;
   }
   
-  .input-container {
+  .form-group {
     margin-bottom: 20px;
   }
   
-  .text-input, .search-input {
+  .input-field, .search-box {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -217,13 +217,13 @@
     box-sizing: border-box;
   }
   
-  .search-container {
+  .search-form {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
   }
   
-  .search-btn, .submit-btn {
+  .search-button, .create-button {
     padding: 10px 20px;
     background-color: #007bff;
     color: #fff;
@@ -234,11 +234,11 @@
     margin-left: 10px;
   }
   
-  .search-btn:hover, .submit-btn:hover {
+  .search-button:hover, .create-button:hover {
     background-color: #0056b3;
   }
   
-  .error-message {
+  .error-box {
     background-color: #f8d7da;
     color: #842029;
     border: 1px solid #f5c2c7;
@@ -248,7 +248,7 @@
     text-align: center;
   }
   
-  .results-container {
+  .results-section {
     margin-top: 20px;
     max-height: 300px; 
     overflow-y: auto;
@@ -257,14 +257,14 @@
     padding: 10px;
   }
   
-  .results-heading {
+  .results-title {
     font-size: 24px;
     font-weight: bold;
     color: #444;
     margin-bottom: 10px;
   }
   
-  .user-item {
+  .user-card {
     padding: 10px;
     margin: 10px 0;
     background-color: #f9f9f9;
@@ -275,12 +275,12 @@
     align-items: center;
   }
   
-  .user-username {
+  .user-name {
     font-size: 18px;
     color: #007bff;
   }
   
-  .select-btn, .deselect-btn {
+  .add-button, .remove-button {
     padding: 5px 10px;
     background-color: #28a745;
     color: #fff;
@@ -290,32 +290,32 @@
     font-size: 14px;
   }
   
-  .select-btn:hover, .deselect-btn:hover {
+  .add-button:hover, .remove-button:hover {
     background-color: #218838;
   }
   
-  .select-btn[disabled], .deselect-btn[disabled] {
+  .add-button[disabled], .remove-button[disabled] {
     background-color: #ccc;
     cursor: not-allowed;
   }
   
-  .members-container {
+  .selected-users-section {
     margin-top: 20px;
   }
   
-  .members-heading {
+  .selected-title {
     font-size: 20px;
     font-weight: bold;
     color: #444;
     margin-bottom: 10px;
   }
   
-  .members-list {
+  .selected-users {
     display: flex;
     flex-wrap: wrap;
   }
   
-  .member-tag {
+  .selected-user {
     padding: 5px 10px;
     background-color: #e9ecef;
     border-radius: 5px;
@@ -323,15 +323,14 @@
     font-size: 16px;
   }
   
-  .preview-img {
+  .preview-image {
     max-width: 200px;
     max-height: 200px;
     margin-top: 10px;
   }
   @media (max-width: 768px) {
-  .results-container {
+  .results-section {
     max-height: 200px;
   }
 }
   </style>
-
