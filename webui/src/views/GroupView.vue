@@ -2,94 +2,94 @@
 export default {
   data() {
     return {
-      userDisplayName: "",
-      errorNotification: null,
-      isLoading: false,
-      userGroups: []
+      username: "",
+      errormsg: null,
+      loading: false,
+      groups: []
     };
   },
   methods: {
-    async fetchUserGroups() {
-      this.errorNotification = null;
-      this.isLoading = true;
+    async loadGroups() {
+      this.errormsg = null;
+      this.loading = true;
       try {
-        const authToken = localStorage.getItem("token");
-        if (!authToken) {
+        const token = localStorage.getItem("token");
+        if (!token) {
           this.$router.push({ path: "/" });
           return;
         }
-        const apiResponse = await this.$axios.get("/groups", {
+        const response = await this.$axios.get("/groups", {
           headers: {
-            Authorization: `Bearer ${authToken}`
+            Authorization: `Bearer ${token}`
           }
         });
-        this.userGroups = apiResponse.data || [];
-      } catch (apiError) {
-        console.error("Error fetching groups:", apiError);
-        this.errorNotification = "Unable to load groups. Please refresh the page.";
+        this.groups = response.data || [];
+      } catch (error) {
+        console.error("Error loading groups:", error);
+        this.errormsg = "Failed to load groups. Please try again.";
       } finally {
-        this.isLoading = false;
+        this.loading = false;
       }
     },
-    navigateToGroup(groupIdentifier, groupTitle) {
-        localStorage.setItem("groupName", groupTitle);
+    viewGroup(groupId, groupName) {
+        localStorage.setItem("groupName", groupName);
         this.$router.push({
-            path: `/groups/${groupIdentifier}`
+            path: `/groups/${groupId}`
         });
     },
-    reloadGroups() {
-        this.fetchUserGroups();
+    refresh() {
+        this.loadGroups();
     },
-    signOut() {
+    logOut() {
         this.$router.push({ path: "/" });
     },
-    createNewGroup() {
+    newGroup() {
         this.$router.push({ path: "/new-group" });
     }
   },
   mounted() {
-    this.userDisplayName = localStorage.getItem("name") || "User";
-    this.fetchUserGroups();
+    this.username = localStorage.getItem("name") || "Guest";
+    this.loadGroups();
   }
 };
 </script>
 
 <template>
   <div>
-    <div class="header-container">
-      <h1 class="page-heading">{{ userDisplayName }}, your group list</h1>
-      <div class="action-buttons">
-        <div class="button-group">
-          <button type="button" class="secondary-button" @click="reloadGroups">Reload</button>
-          <button type="button" class="secondary-button" @click="signOut">Sign Out</button>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <h1 class="h2">{{ username }}, here are your groups</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">Refresh</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">Log Out</button>
         </div>
-        <div class="button-group">
-          <button type="button" class="primary-button" @click="createNewGroup">Create Group</button>
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-primary" @click="newGroup">New group</button>
         </div>
       </div>
     </div>
-    <ErrorMsg v-if="errorNotification" :msg="errorNotification" />
+    <ErrorMsg v-if="errormsg" :msg="errormsg" />
     <div>
-      <p v-if="isLoading">Loading groups...</p>
-      <div v-else-if="userGroups.length === 0">
-        <p>No groups available.</p>
+      <p v-if="loading">Loading...</p>
+      <div v-else-if="groups.length === 0">
+        <p>No groups found.</p>
       </div>
-      <div v-else class="groups-list-container">
+      <div v-else class="conversations-container">
         <div
-          v-for="group in userGroups"
+          v-for="group in groups"
           :key="group.id"
-          class="group-item-card"
-          @click="navigateToGroup(group.id, group.name)"
+          class="conversation-block"
+          @click="viewGroup(group.id, group.name)"
         >
-          <div class="group-image-container">
+          <div class="conversation-photo">
             <img
               v-if="group.conversationPhoto.String"
               :src="'data:image/png;base64,' + group.conversationPhoto.String"
-              alt="Group Image"
-              class="group-image"
+              alt="Group Photo"
+              class="profile-picture"
             />
           </div>
-          <div class="group-info">
+          <div class="conversation-details">
             <h4>{{ group.name }}</h4>
           </div>
         </div>
@@ -99,122 +99,99 @@ export default {
 </template>
 
 <style scoped>
-.header-container {
+.d-flex {
   display: flex;
+}
+
+.justify-content-between {
   justify-content: space-between;
+}
+
+.flex-wrap {
   flex-wrap: wrap;
+}
+
+.align-items-center {
   align-items: center;
+}
+
+.pt-3 {
   padding-top: 1rem;
+}
+
+.pb-2 {
   padding-bottom: 0.5rem;
+}
+
+.mb-3 {
   margin-bottom: 1rem;
+}
+
+.border-bottom {
   border-bottom: 1px solid #dee2e6;
 }
 
-.page-heading {
-  font-size: 1.75rem;
-  font-weight: 600;
-}
-
-.action-buttons {
+.btn-toolbar {
   display: flex;
   flex-wrap: wrap;
 }
 
-.button-group {
+.btn-group {
   position: relative;
   display: inline-flex;
   vertical-align: middle;
+}
+
+.me-2 {
   margin-right: 0.5rem;
+}
+
+.mb-2 {
   margin-bottom: 0.5rem;
 }
 
-.secondary-button {
-  padding: 0.375rem 0.75rem;
-  background-color: transparent;
-  color: #6c757d;
-  border: 1px solid #6c757d;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.15s ease-in-out;
+.mb-md-0 {
+  margin-bottom: 0;
 }
 
-.secondary-button:hover {
-  background-color: #6c757d;
-  color: white;
-}
-
-.primary-button {
-  padding: 0.375rem 0.75rem;
-  background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.15s ease-in-out;
-}
-
-.primary-button:hover {
-  background-color: #007bff;
-  color: white;
-}
-
-.groups-list-container {
+.conversations-container {
   display: flex;
   flex-direction: column;
 }
 
-.group-item-card {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  margin-bottom: 0.75rem;
+.conversation-block {
+  background-color: #f0f0f0;
+  padding: 15px;
+  margin-bottom: 10px;
   cursor: pointer;
-  border-radius: 0.5rem;
+  border-radius: 5px;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  transition: background-color 0.2s ease;
+  gap: 15px;
 }
 
-.group-item-card:hover {
-  background-color: #e9ecef;
-}
-
-.group-image-container {
+.conversation-photo {
   flex-shrink: 0;
   width: 75px;
   height: 75px;
 }
 
-.group-image {
+.profile-picture {
   width: 75px;
   height: 75px;
   object-fit: cover;
   border-radius: 50%;
 }
 
-.group-info h4 {
+.conversation-details h4 {
   margin-top: 0;
   margin-bottom: 0;
-  color: #333;
 }
 
 @media (max-width: 600px) {
-  .group-item-card {
+  .conversation-block {
     flex-direction: column;
     align-items: flex-start;
-  }
-  
-  .header-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .action-buttons {
-    width: 100%;
-    justify-content: space-between;
   }
 }
 </style>
