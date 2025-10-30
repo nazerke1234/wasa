@@ -1,52 +1,52 @@
 <template>
   <div>
-    <div class="page-header">
-      <h1 class="page-heading">{{ userName }}, find and message users!</h1>
-      <div class="action-controls">
-        <div class="control-group">
-          <button type="button" class="control-btn secondary" @click="reloadPage">Reload</button>
-          <button type="button" class="control-btn secondary" @click="signOut">Sign Out</button>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+      <h1 class="h2">{{ userName }}, search and text people!</h1>
+      <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">Refresh</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">Log Out</button>
         </div>
-        <div class="control-group">
-          <button type="button" class="control-btn primary" @click="createGroup">Create Group</button>
+        <div class="btn-group me-2">
+          <button type="button" class="btn btn-sm btn-outline-primary" @click="newGroup">New group</button>
         </div>
       </div>
     </div>
 
-    <div class="search-interface">
-      <form @submit.prevent="findUsers" class="search-form">
+    <div class="search-container">
+      <form @submit.prevent="searchUsers" class="search-form">
         <input
-          id="user-search"
-          v-model="searchTerm"
-          class="search-input"
+          id="username"
+          v-model="query"
+          class="search-box"
           type="text"
-          placeholder="Enter username to search"
+          placeholder="Search by username"
         />
-        <button class="search-submit-btn" type="submit">Find Users</button>
+        <button class="search-button" type="submit">Search</button>
       </form>
-      <div v-if="errorMessage" class="error-alert">
-        {{ errorMessage }}
+      <div v-if="error" class="error-box">
+        {{ error }}
       </div>
-      <div v-if="isLoading">
+      <div v-if="loading">
         <LoadingSpinner />
       </div>
-      <div v-if="!isLoading && displayResults" class="results-container">
-        <h2 class="results-heading">Search Results:</h2>
-        <template v-if="foundUsers.length > 0">
-          <div v-for="user in foundUsers" :key="user.id" class="user-result-card">
-            <h5 class="user-username">
+      <div v-if="!loading && showResults" class="results-section">
+        <h2 class="results-title">Results:</h2>
+        <template v-if="users.length > 0">
+          <div v-for="user in users" :key="user.id" class="user-card">
+            <h5 class="user-name">
               @{{ user.name }}
             </h5>
             <button
-              class="message-btn"
-              @click="startChat(user.id, user.name)"
+              class="text-button"
+              @click="navigateToConversation(user.id, user.name)"
             >
-              Message
+              Text
             </button>
           </div>
         </template>
         <template v-else>
-          <p class="no-results-message">No users found for "{{ previousSearchTerm }}"</p>
+          <p class="no-results">No users found matching "{{ lastQuery }}"</p>
         </template>
       </div>
     </div>
@@ -65,71 +65,69 @@ export default {
   data() {
     return {
       userName: localStorage.getItem("name"),
-      searchTerm: "",
-      previousSearchTerm: "",
-      foundUsers: [],
-      isLoading: false,
-      displayResults: false,
-      errorMessage: "",
+      query: "",
+      lastQuery: "",
+      users: [],
+      loading: false,
+      showResults: false,
+      error: "",
     };
   },
   methods: {
-    async findUsers() {
-      if (!this.searchTerm.trim()) {
-        this.errorMessage = "Please enter a valid search term.";
-        this.displayResults = false;
+    async searchUsers() {
+      if (!this.query.trim()) {
+        this.error = "Please enter a valid search query.";
+        this.showResults = false;
         return;
       }
-      this.isLoading = true;
-      this.errorMessage = "";
-      this.foundUsers = [];
-      this.displayResults = false;
+      this.loading = true;
+      this.error = "";
+      this.users = [];
+      this.showResults = false;
       try {
-        const apiResponse = await axios.get(`/search`, {
-          params: { username: this.searchTerm },
+        const response = await axios.get(`/search`, {
+          params: { username: this.query },
         });
-        this.foundUsers = apiResponse.data;
-        this.previousSearchTerm = this.searchTerm;
-        this.displayResults = true;
-      } catch (apiError) {
-        const errorCode = apiError.response?.status;
-        const errorDetails = apiError.response?.data?.message || "Unable to retrieve users.";
-        this.errorMessage = `Error ${errorCode}: ${errorDetails}`;
+        this.users = response.data;
+        this.lastQuery = this.query;
+        this.showResults = true;
+      } catch (err) {
+        const status = err.response?.status;
+        const reason = err.response?.data?.message || "Failed to fetch users.";
+        this.error = `Status ${status}: ${reason}`;
       } finally {
-        this.isLoading = false;
+        this.loading = false;
       }
     },
-    async startChat(recipientIdentifier, recipientDisplayName) {
-      localStorage.setItem("conversationName", recipientDisplayName);
-      const senderIdentifier = localStorage.getItem("token");
-      try {
-        const apiResponse = await axios.post(`/chats`, { 
-          senderId: senderIdentifier, 
-          recipientId: recipientIdentifier 
+    navigateToConversation(recipientId, recipientName) {
+      localStorage.setItem("conversationName", recipientName);
+      const senderId = localStorage.getItem("token");
+      axios
+        .post(`/conversations`, { senderId, recipientId })
+        .then((response) => {
+          const conversationId = response.data.conversationId;
+          this.$router.push({
+            path: `/conversations/${conversationId}`
+          });
+        })
+        .catch((error) => {
+          console.error("Error starting conversation:", error);
         });
-        const chatId = apiResponse.data.conversationId;
-        this.$router.push({
-          path: `/chats/${chatId}`
-        });
-      } catch (apiError) {
-        console.error("Error initiating conversation:", apiError);
-        this.errorMessage = "Unable to start conversation. Please try again.";
-      }
     },
-    reloadPage() {
+    refresh() {
       this.$router.push({ path: "/search" });
     },
-    signOut() {
+    logOut() {
       localStorage.clear();
       this.$router.push({ path: "/" });
     },
-    createGroup() {
+    newGroup() {
       this.$router.push({ path: "/new-group" });
     }
   },
   mounted() {
-    const authToken = localStorage.getItem("token");
-    if (!authToken) {
+    const token = localStorage.getItem("token");
+    if (!token) {
       this.$router.push({ path: "/" });
     }
   }
@@ -137,220 +135,113 @@ export default {
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  align-items: center;
-  padding-top: 1rem;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.page-heading {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #333;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.action-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.control-group {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.control-btn {
-  padding: 0.375rem 0.75rem;
-  border: 1px solid;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.control-btn.secondary {
-  background-color: transparent;
-  color: #6b7280;
-  border-color: #6b7280;
-}
-
-.control-btn.secondary:hover {
-  background-color: #6b7280;
-  color: white;
-}
-
-.control-btn.primary {
-  background-color: transparent;
-  color: #3b82f6;
-  border-color: #3b82f6;
-}
-
-.control-btn.primary:hover {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.search-interface {
+.search-container {
   text-align: center;
-  padding: 2rem;
+  padding: 20px;
   max-width: 600px;
   margin: 0 auto;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
 }
 
 .search-form {
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  margin-bottom: 20px;
 }
 
-.search-input {
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+.search-box {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
   width: 300px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.search-submit-btn {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+.search-button {
+  padding: 10px 20px;
+  background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border-radius: 5px;
+  font-size: 16px;
+  margin-left: 10px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.search-submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+.search-button:hover {
+  background-color: #0056b3;
 }
 
-.error-alert {
-  background-color: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin: 1.5rem 0;
+.error-box {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 20px 0;
   text-align: center;
 }
 
-.results-container {
-  margin-top: 2rem;
+.results-section {
+  margin-top: 20px;
 }
 
-.results-heading {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 1rem;
+.results-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #444;
+  margin-bottom: 10px;
 }
 
-.user-result-card {
-  padding: 1rem;
-  margin: 0.75rem 0;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  font-size: 1rem;
+.user-card {
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.user-result-card:hover {
-  background-color: #f9fafb;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.user-card:hover {
+  background-color: #e9ecef;
 }
 
-.user-username {
+.user-name {
   margin: 0;
-  font-size: 1.125rem;
-  color: #3b82f6;
-  font-weight: 500;
+  font-size: 18px;
+  color: #007bff;
 }
 
-.user-username:hover {
+.user-name:hover {
   text-decoration: underline;
-  cursor: pointer;
 }
 
-.message-btn {
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.text-button {
+  padding: 5px 10px;
+  background-color: #28a745;
   color: #fff;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-size: 14px;
 }
 
-.message-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+.text-button:hover {
+  background-color: #218838;
 }
 
-.no-results-message {
-  font-size: 1rem;
-  color: #6b7280;
-  margin-top: 1.5rem;
-  font-style: italic;
-}
-
-@media (max-width: 640px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .action-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .search-form {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .search-input {
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .user-result-card {
-    flex-direction: column;
-    gap: 0.75rem;
-    text-align: center;
-  }
+.no-results {
+  font-size: 16px;
+  color: #666;
+  margin-top: 20px;
 }
 </style>
-
-
