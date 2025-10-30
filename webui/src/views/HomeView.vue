@@ -92,10 +92,10 @@ export default {
         this.loading = false;
       }
     },
-    viewConversation(conversationId, conversationName) {
+    viewConversation(chatId, conversationName) {
       localStorage.setItem("conversationName", conversationName);
       this.$router.push({
-        path: `/chats/${conversationId}`,
+        path: `/chats/${chatId}`,
       });
     },
     truncateText(text, length = 50, clamp = '...') {
@@ -204,4 +204,5 @@ export default {
   }
 }
 </style>
+
 
