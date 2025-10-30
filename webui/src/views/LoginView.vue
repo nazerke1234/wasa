@@ -3,66 +3,73 @@ export default {
   data() {
     localStorage.clear();
     return {
-      errorNotification: null,
-      usernameInput: "", 
-      userProfile: {
-        identifier: "",
-        displayName: "",
+      errormsg: null,
+      name: "", 
+      profile: {
+        id: "",
+        name: "",
       },
     };
   },
   methods: {
-    async fetchDefaultAvatar() {
+    async loadDefaultPhoto() {
       try {
-          const imageResponse = await fetch('/nopfp.jpg');
-          const imageBlob = await imageResponse.blob();
-          const fileReader = new FileReader();
+          const response = await fetch('/nopfp.jpg');
+          const blob = await response.blob();
+          const reader = new FileReader();
           return new Promise((resolve, reject) => {
-              fileReader.onload = () => {
-                  const base64Data = fileReader.result.toString().split(',')[1];
-                  resolve(base64Data);
+              reader.onload = () => {
+                  const base64String = reader.result.toString().split(',')[1];
+                  resolve(base64String);
               };
-              fileReader.onerror = reject;
-              fileReader.readAsDataURL(imageBlob);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
           });
-      } catch (fetchError) {
-          console.error('Unable to load default avatar:', fetchError);
+      } catch (error) {
+          console.error('Error loading default photo:', error);
           return null;
       }
+  },
+    blobToBase64(blob) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
     },
-    async processLogin() {
-      if (this.usernameInput.trim() === "") {
-        this.errorNotification = "Please enter your username.";
+    async doLogin() {
+      if (this.name.trim() === "") {
+        this.errormsg = "Name cannot be empty.";
         return;
       }
       try {
-        const avatarData = await this.fetchDefaultAvatar();
-        const apiResponse = await this.$axios.post("/session", {
-          name: this.usernameInput,
-          photo: avatarData,
+        const photoData = await this.loadDefaultPhoto();
+        const response = await this.$axios.post("/session", {
+          name: this.name,
+          photo: photoData,
         }, {
           headers: {
             'Content-Type': 'application/json'
           }
         });
-        if (apiResponse.data.identifier) {
-          this.userProfile.identifier = apiResponse.data.identifier;
-          this.userProfile.displayName = this.usernameInput; 
+        if (response.data.identifier) {
+          this.profile.id = response.data.identifier;
+          this.profile.name = this.name; 
         } else {
-          throw new Error("Invalid server response. Missing user identifier.");
+          throw new Error("Unexpected server response. Missing 'identifier'.");
         }
-        localStorage.setItem("token", this.userProfile.identifier);
-        localStorage.setItem("name", this.userProfile.displayName);
+        localStorage.setItem("token", this.profile.id);
+        localStorage.setItem("name", this.profile.name);
         this.$router.push({ path: "/home" });
-      } catch (apiError) {
-        if (apiError.response && apiError.response.status === 400) {
-          this.errorNotification =
-            "Please verify all fields and try again.";
-        } else if (apiError.response && apiError.response.status === 500) {
-          this.errorNotification =
-            "Server error occurred. Please try again later.";
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.errormsg =
+            "Form error, please check all fields and try again.";
+        } else if (e.response && e.response.status === 500) {
+          this.errormsg =
+            "An internal error occurred. Please try again later.";
         } else {
-          this.errorNotification = apiError.toString();
+          this.errormsg = e.toString();
         }
       }
     },
@@ -71,99 +78,66 @@ export default {
 </script>
 
 <template>
-  <div class="auth-panel">
-    <h1 class="app-welcome">Welcome to WASAText Messenger</h1>
-    <div class="input-section">
+  <div class="login-container">
+    <h1 class="login-title">Welcome to WASAText</h1>
+    <div class="input-group">
       <input
         type="text"
-        id="username-field"
-        v-model="usernameInput"
-        class="username-input"
-        placeholder="Enter your username to access WASAText"
-        @keyup.enter="processLogin"
+        id="name"
+        v-model="name"
+        class="login-input"
+        placeholder="Insert your name to log in WASAText."
       />
-      <button class="auth-button" type="button" @click="processLogin">Enter</button>
+      <button class="login-button" type="button" @click="doLogin">Login</button>
     </div>
-    <ErrorMsg v-if="errorNotification" :msg="errorNotification"></ErrorMsg>
+    <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
   </div>
 </template>
 
 <style scoped>
-.auth-panel {
-  max-width: 420px;
-  margin: 80px auto;
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
   text-align: center;
-  padding: 30px;
-  border: 1px solid #e1e5e9;
-  border-radius: 12px;
-  background-color: #ffffff;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.app-welcome {
-  font-size: 26px;
-  font-weight: 600;
-  margin-bottom: 24px;
-  color: #2c3e50;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
 }
 
-.input-section {
+.input-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
 }
 
-.username-input {
-  padding: 12px 16px;
+.login-input {
+  padding: 10px;
   width: 100%;
-  margin-bottom: 8px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
-.username-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.auth-button {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.login-button {
+  padding: 10px 20px;
+  background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  width: 100%;
 }
 
-.auth-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.auth-button:active {
-  transform: translateY(0);
-}
-
-@media (max-width: 480px) {
-  .auth-panel {
-    margin: 40px 20px;
-    padding: 24px;
-  }
-  
-  .app-welcome {
-    font-size: 22px;
-  }
+.login-button:hover {
+  background-color: #0056b3;
 }
 </style>
