@@ -1,242 +1,143 @@
-<template>
-  <div>
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-      <h1 class="h2">{{ userName }}, here is your profile</h1>
-      <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">Refresh</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">Log Out</button>
-        </div>
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-primary" @click="newGroup">New group</button>
-        </div>
-      </div>
-    </div>
-    
-    <div class="profile-container">
-      <div class="profile-header">
-        <div class="photo-container">
-          <img v-if="userPhoto" :src="userPhoto" alt="User Photo" class="profile-photo" />
-          <p v-else class="no-photo-placeholder">No Photo</p>
-        </div>
-        <div class="username-container">
-          <h1 class="username">{{ userName }}</h1>
-          <div class="update-username-section">
-            <input
-              v-model="newUserName"
-              placeholder="Enter new username"
-              maxlength="16"
-              minlength="3"
-            />
-            <button
-              class="custom-button"
-              @click="updateUsername"
-              :disabled="!newUserName || newUserName === userName"
-            >
-              Update Username
-            </button>
-          </div>
-          <div class="update-photo-section">
-            <input type="file" @change="handlePhotoUpload" accept="image/*" />
-            <button class="custom-button" @click="updatePhoto" :disabled="!newPhoto">
-              Update Photo
-            </button>
-          </div>
-        </div>
-      </div>
-      <ErrorMsg v-if="errormsg" :msg="errormsg" />
-    </div>
-  </div>
-</template>
-
 <script>
-import axios from "../services/axios";
-import ErrorMsg from "../components/ErrorMsg.vue";
-
 export default {
-  name: "ProfileView",
-  components: {
-    ErrorMsg,
-  },
   data() {
+    localStorage.clear();
     return {
-      userName: "", 
-      userPhoto: null, 
-      newUserName: "", 
-      newPhoto: null, 
-      errormsg: null, 
+      errormsg: null,
+      name: "", 
+      profile: {
+        id: "",
+        name: "",
+      },
     };
   },
   methods: {
-    async fetchUserProfile() {
+    async loadDefaultPhoto() {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          this.$router.push({ path: "/" });
-          return;
-        }
-        const response = await axios.get("/users/photo", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const { photo } = response.data;
-        this.userName = localStorage.getItem("name");
-        this.userPhoto = photo ? `data:image/jpeg;base64,${photo}` : null;
+          const response = await fetch('/nopfp.jpg');
+          const blob = await response.blob();
+          const reader = new FileReader();
+          return new Promise((resolve, reject) => {
+              reader.onload = () => {
+                  const base64String = reader.result.toString().split(',')[1];
+                  resolve(base64String);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+          });
       } catch (error) {
-        console.error("Failed to fetch user profile:", error);
-        this.errormsg = "Failed to load user profile. Please try again later.";
+          console.error('Error loading default photo:', error);
+          return null;
       }
-    },
-    handlePhotoUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        this.newPhoto = file;
-      }
-    },
-    async updatePhoto() {
-      if (!this.newPhoto) return;
-      try {
-        const token = localStorage.getItem("token");
-        const formData = new FormData();
-        formData.append("photo", this.newPhoto);
-        await axios.put("/users/photo", formData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        alert("Photo updated successfully!");
-        this.newPhoto = null;
-        this.fetchUserProfile(); 
-      } catch (error) {
-        console.error("Failed to update photo:", error);
-        this.errormsg = "Failed to update photo. Please try again.";
-      }
-    },
-    async updateUsername() {
-      if (!this.newUserName || this.newUserName === this.userName) return;
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.put(
-          "/users/name",
-          { name: this.newUserName },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        alert("Username updated successfully!");
-        localStorage.setItem("name", this.newUserName);
-        this.userName = response.data.name;
-        this.newUserName = response.data.name;
-      } catch (error) {
-        console.error("Failed to update username:", error);
-        this.errormsg = "Failed to update username. Please try again.";
-      }
-    },
-    refresh() {
-      this.fetchUserProfile();
-    },
-    logOut() {
-      localStorage.clear();
-      this.$router.push({ path: "/" });
-    },
-    newGroup() {
-      this.$router.push({ path: "/new-group" });
-    }
   },
-  mounted() {
-    this.fetchUserProfile();
+    blobToBase64(blob) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    },
+    async doLogin() {
+      if (this.name.trim() === "") {
+        this.errormsg = "Name cannot be empty.";
+        return;
+      }
+      try {
+        const photoData = await this.loadDefaultPhoto();
+        const response = await this.$axios.post("/session", {
+          name: this.name,
+          photo: photoData,
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.data.identifier) {
+          this.profile.id = response.data.identifier;
+          this.profile.name = this.name; 
+        } else {
+          throw new Error("Unexpected server response. Missing 'identifier'.");
+        }
+        localStorage.setItem("token", this.profile.id);
+        localStorage.setItem("name", this.profile.name);
+        this.$router.push({ path: "/home" });
+      } catch (e) {
+        if (e.response && e.response.status === 400) {
+          this.errormsg =
+            "Form error, please check all fields and try again.";
+        } else if (e.response && e.response.status === 500) {
+          this.errormsg =
+            "An internal error occurred. Please try again later.";
+        } else {
+          this.errormsg = e.toString();
+        }
+      }
+    },
   },
 };
 </script>
 
+<template>
+  <div class="login-container">
+    <h1 class="login-title">Welcome to WASAText</h1>
+    <div class="input-group">
+      <input
+        type="text"
+        id="name"
+        v-model="name"
+        class="login-input"
+        placeholder="Insert your name to log in WASAText."
+      />
+      <button class="login-button" type="button" @click="doLogin">Login</button>
+    </div>
+    <ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+  </div>
+</template>
+
 <style scoped>
-.profile-container {
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
+  text-align: center;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.input-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
 }
 
-.profile-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
+.login-input {
+  padding: 10px;
   width: 100%;
-  max-width: 800px;
-}
-
-.photo-container {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  overflow: hidden;
+  margin-bottom: 10px;
   border: 1px solid #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
+  border-radius: 5px;
 }
 
-.profile-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.no-photo-placeholder {
-  color: #aaa;
-  font-size: 14px;
-}
-
-.username-container {
-  flex: 1;
-}
-
-.username {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.update-username-section,
-.update-photo-section {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  flex: 1;
-  max-width: 300px;
-}
-
-.custom-button {
-  padding: 8px 16px;
-  background-color: transparent;
-  border: 1px solid #007bff;
-  color: #007bff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.custom-button:hover:not(:disabled) {
+.login-button {
+  padding: 10px 20px;
   background-color: #007bff;
   color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
 }
 
-.custom-button:disabled {
-  border-color: #cccccc;
-  color: #cccccc;
-  cursor: not-allowed;
-  background-color: transparent;
+.login-button:hover {
+  background-color: #0056b3;
 }
 </style>
