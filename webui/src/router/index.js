@@ -17,7 +17,7 @@ const routes = [
   { path: "/me", component: ProfileView},
   { path: "/groups", component: GroupView},
   { path: "/new-group", component: CreateGroupView},
-  { path: "/groups/:uuid", name: "GroupEditView", component: EditGroupView, props: true}
+  { path: "/groups/:uuid", name: "EditGroupView", component: EditGroupView, props: true}
 ];
 
 const router = createRouter({
@@ -27,3 +27,4 @@ const router = createRouter({
 
 
 export default router;
+
