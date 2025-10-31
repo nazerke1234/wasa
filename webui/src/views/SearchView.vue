@@ -103,11 +103,11 @@ export default {
       localStorage.setItem("conversationName", recipientName);
       const senderId = localStorage.getItem("token");
       axios
-        .post(`/conversations`, { senderId, recipientId })
+        .post(`/chats`, { senderId, recipientId })
         .then((response) => {
           const conversationId = response.data.conversationId;
           this.$router.push({
-            path: `/conversations/${conversationId}`
+            path: `/chats/${conversationId}`
           });
         })
         .catch((error) => {
@@ -245,3 +245,4 @@ export default {
   margin-top: 20px;
 }
 </style>
+
