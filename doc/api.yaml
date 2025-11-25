@@ -3,6 +3,10 @@ info:
   title: WASAText
   description: |-
     This OpenAPI document describes APIs for the project "WASAText".
+
+    Student: Nazerke Kulenova
+    Matricola: 2046996
+    E-mail: kulenova.2046996@studenti.uniroma1.it
     
   version: "1.0.2"
 
@@ -1184,3 +1188,4 @@ components:
           minLength: 0
 
           maxLength: 1000000
+
