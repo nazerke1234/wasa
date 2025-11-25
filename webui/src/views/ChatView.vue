@@ -190,7 +190,7 @@ export default {
         this.$router.push({ path: "/" });
         return;
       }
-      const response = await axios.get(`/chats/${this.conversationId}`, {
+      const response = await axios.get(`/conversations/${this.conversationId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       this.messages = (response.data.messages || []).map(msg => ({
@@ -226,11 +226,11 @@ export default {
       const hasReacted = (message.reactingUserNames || []).includes(this.userName);
       try {
         if (hasReacted) {
-          await axios.delete(`/chats/${this.conversationId}/message/${message.id}/comment`, {
+          await axios.delete(`/conversations/${this.conversationId}/message/${message.id}/comment`, {
             headers: { Authorization: `Bearer ${token}` }
           });
         } else {
-          await axios.post(`/chats/${this.conversationId}/message/${message.id}/comment`, {},
+          await axios.post(`/conversations/${this.conversationId}/message/${message.id}/comment`, {},
             { headers: { Authorization: `Bearer ${token}` } }
           );
         }
@@ -246,7 +246,7 @@ export default {
         this.$router.push({ path: "/" });
         return;
       }
-      await axios.delete(`/chats/${this.conversationId}/message/${message.id}`, {
+      await axios.delete(`/conversations/${this.conversationId}/message/${message.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       this.messages = this.messages.filter(m => m.id !== message.id);
@@ -289,7 +289,7 @@ export default {
     },
     async fetchForwardConversations(messageId) {
       const token = localStorage.getItem("token");
-      const response = await axios.get('/chats', {
+      const response = await axios.get('/conversations', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const conversations = response.data.filter(conv => conv.id !== this.conversationId);
@@ -649,3 +649,4 @@ export default {
   }
 }
 </style>
+
