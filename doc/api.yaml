@@ -141,41 +141,41 @@ paths:
                 name: "NewName"
                 photo: "aGVsbG8="
 
-  /chats:
+  /conversations:
     get:
       tags:
-        - chat
-      summary: Retrieves the list of chats for the authenticated user
-      description: Retrieves chats.
-      operationId: getMychats
+        - conversation
+      summary: Retrieves the list of conversations for the authenticated user
+      description: Retrieves conversations.
+      operationId: getMyConversations
       security:
         - BearerAuth: []
       responses:
         '200':
-          description: List of chats
+          description: List of conversations
           content:
             application/json:
               schema:
                 type: object
-                description: Contains a list of chats.
+                description: Contains a list of conversations.
                 required:
-                  - chats
+                  - conversations
                 properties:
-                  chats:
+                  conversations:
                     type: array
-                    description: List of chats
+                    description: List of conversations
                     minItems: 0
                     maxItems: 1000
                     items:
-                      $ref: '#/components/schemas/ChatDetailsSummary'
+                      $ref: '#/components/schemas/ConversationDetailsSummary'
               example:
-                chats:
+                conversations:
                   - id: "conv123"
                     name: "Group Chat"
                     members:
                       - "user123"
                       - "user456"
-                    chatPhoto: "aGVsbG8="
+                    conversationPhoto: "aGVsbG8="
                     lastMessage:
                       id: "msg789"
                       senderId: "user456"
@@ -187,10 +187,10 @@ paths:
                       reactingUserIds: []
     post:
       tags:
-        - chat
-      summary: Starts a new direct chat
-      description: Creates a new direct chat between two users if one does not exist and returns the canonical chat details.
-      operationId: startChat
+        - conversation
+      summary: Starts a new direct conversation
+      description: Creates a new direct conversation between two users if one does not exist and returns the canonical conversation details.
+      operationId: startConversation
       security:
         - BearerAuth: []
       requestBody:
@@ -200,7 +200,7 @@ paths:
           application/json:
             schema:
               type: object
-              description: Payload to start a direct chat.
+              description: Payload to start a direct conversation.
               required:
                 - senderId
                 - recipientId
@@ -221,18 +221,18 @@ paths:
                   maxLength: 50
       responses:
         '201':
-          description: Chat started successfully and returns the canonical chat details.
+          description: Conversation started successfully and returns the canonical conversation details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChatDetails'
+                $ref: '#/components/schemas/ConversationDetails'
               example:
                 id: "conv123"
                 name: "Group Chat"
                 members:
                   - "user123"
                   - "user456"
-                chatPhoto: "aGVsbG8="
+                conversationPhoto: "aGVsbG8="
                 lastMessage:
                   id: "msg789"
                   senderId: "user456"
@@ -244,20 +244,20 @@ paths:
                   reactingUserIds: []
                 messages: []
 
-  /chats/{chatId}:
+  /conversations/{conversationId}:
     get:
       tags:
-        - chat
-      summary: Retrieves details of a specific chat
-      description: Retrieves chat details.
-      operationId: getChat
+        - conversation
+      summary: Retrieves details of a specific conversation
+      description: Retrieves conversation details.
+      operationId: getConversation
       security:
         - BearerAuth: []
       parameters:
-        - name: chatId
+        - name: conversationId
           in: path
           required: true
-          description: ID of the chat.
+          description: ID of the conversation.
           schema:
             type: string
             pattern: '^[a-zA-Z0-9_]+$'
@@ -265,18 +265,18 @@ paths:
             maxLength: 50
       responses:
         '200':
-          description: Chat details.
+          description: Conversation details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChatDetails'
+                $ref: '#/components/schemas/ConversationDetails'
               example:
                 id: "conv123"
                 name: "Group Chat"
                 members:
                   - "user123"
                   - "user456"
-                chatPhoto: "aGVsbG8="
+                conversationPhoto: "aGVsbG8="
                 lastMessage:
                   id: "msg789"
                   senderId: "user456"
@@ -288,20 +288,20 @@ paths:
                   reactingUserIds: []
                 messages: []
 
-  /chats/{chatId}/message:
+  /conversations/{conversationId}/message:
     post:
       tags:
         - message
-      summary: Sends a message in a chat
+      summary: Sends a message in a conversation
       description: Sends a message using multipart/form-data.
       operationId: sendMessage
       security:
         - BearerAuth: []
       parameters:
-        - name: chatId
+        - name: conversationId
           in: path
           required: true
-          description: ID of the chat.
+          description: ID of the conversation.
           schema:
             type: string
             pattern: '^[a-zA-Z0-9_]+$'
@@ -347,20 +347,20 @@ paths:
                 reactionCount: 0
                 reactingUserIds: []
 
-  /chats/{chatId}/message/{messageId}/forward:
+  /conversations/{conversationId}/message/{messageId}/forward:
     post:
       tags:
         - message
-      summary: Forwards an existing message to another chat
-      description: Forwards a message to another chat.
+      summary: Forwards an existing message to another conversation
+      description: Forwards a message to another conversation.
       operationId: forwardMessage
       security:
         - BearerAuth: []
       parameters:
-        - name: chatId
+        - name: conversationId
           in: path
           required: true
-          description: ID of the chat containing the message to forward.
+          description: ID of the conversation containing the message to forward.
           schema:
             type: string
             pattern: '^[a-zA-Z0-9_]+$'
@@ -376,14 +376,14 @@ paths:
             minLength: 1
             maxLength: 50
       requestBody:
-        description: JSON payload specifying the target chat ID.
+        description: JSON payload specifying the target conversation ID.
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ForwardMessageRequest'
             example:
-              targetChatId: "conv456"
+              targetConversationId: "conv456"
       responses:
         '201':
           description: Message forwarded successfully.
@@ -401,20 +401,20 @@ paths:
                 reactionCount: 0
                 reactingUserIds: []
 
-  /chats/{chatId}/message/{messageId}:
+  /conversations/{conversationId}/message/{messageId}:
     delete:
       tags:
         - message
       summary: Deletes a message
-      description: Deletes a message from the chat.
+      description: Deletes a message from the conversation.
       operationId: deleteMessage
       security:
         - BearerAuth: []
       parameters:
-        - name: chatId
+        - name: conversationId
           in: path
           required: true
-          description: ID of the chat.
+          description: ID of the conversation.
           schema:
             type: string
             pattern: '^[a-zA-Z0-9_]+$'
@@ -433,12 +433,12 @@ paths:
         '204':
           description: Message deleted successfully.
 
-  /chats/{chatId}/message/{messageId}/comment:
+  /conversations/{conversationId}/message/{messageId}/comment:
     parameters:
-      - name: chatId
+      - name: conversationId
         in: path
         required: true
-        description: ID of the chat.
+        description: ID of the conversation.
         schema:
           type: string
           pattern: '^[a-zA-Z0-9_]+$'
@@ -483,17 +483,10 @@ paths:
         '204':
           description: Comment deleted successfully.
 
-  /liveness:
-    get:
-      responses:
-        '200':
-          description: Success
-      summary: 'TODO: Describe GET /liveness'
-
   /search:
     get:
       tags:
-        - chat
+        - conversation
         - user
       summary: Searches for users by username
       description: Searches for users matching a query string.
@@ -567,7 +560,7 @@ paths:
         - group
       summary: Creates a new group
       description: |-
-        Creates a new group chat.
+        Creates a new group conversation.
         Expects multipart/form-data with fields for group name, a JSON string of member IDs (in property "membersJson"),
         and a group image.
       operationId: createGroup
@@ -880,9 +873,9 @@ components:
           minLength: 1
           maxLength: 1000000
 
-    ChatDetailsSummary:
+    ConversationDetailsSummary:
       type: object
-      description: A summary of a chat between users.
+      description: A summary of a conversation between users.
       required:
         - id
         - name
@@ -890,21 +883,21 @@ components:
       properties:
         id:
           type: string
-          description: Unique identifier of the chat.
+          description: Unique identifier of the conversation.
           example: "conv123"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 1
           maxLength: 50
         name:
           type: string
-          description: Name of the chat.
+          description: Name of the conversation.
           example: "Group Chat"
           pattern: '^[a-zA-Z0-9_ ]+$'
           minLength: 1
           maxLength: 50
         members:
           type: array
-          description: List of user IDs participating in the chat.
+          description: List of user IDs participating in the conversation.
           minItems: 1
           maxItems: 1000
           items:
@@ -914,9 +907,9 @@ components:
             pattern: '^[a-zA-Z0-9_]+$'
             minLength: 1
             maxLength: 50
-        chatPhoto:
+        conversationPhoto:
           type: string
-          description: Base64-encoded chat photo (if any).
+          description: Base64-encoded conversation photo (if any).
           example: "aGVsbG8="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
@@ -924,10 +917,10 @@ components:
         lastMessage:
           $ref: '#/components/schemas/Message'
 
-    ChatDetails:
-      title: "Chat Details"
+    ConversationDetails:
+      title: "Conversation Details"
       type: object
-      description: Detailed chat schema.
+      description: Detailed conversation schema.
       required:
         - id
         - name
@@ -936,21 +929,21 @@ components:
       properties:
         id:
           type: string
-          description: Unique identifier of the chat.
+          description: Unique identifier of the conversation.
           example: "conv123"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 1
           maxLength: 50
         name:
           type: string
-          description: Name of the chat.
+          description: Name of the conversation.
           example: "Group Chat"
           pattern: '^[a-zA-Z0-9_ ]+$'
           minLength: 1
           maxLength: 50
         members:
           type: array
-          description: List of user IDs participating in the chat.
+          description: List of user IDs participating in the conversation.
           minItems: 1
           maxItems: 1000
           items:
@@ -960,9 +953,9 @@ components:
             pattern: '^[a-zA-Z0-9_]+$'
             minLength: 1
             maxLength: 50
-        chatPhoto:
+        conversationPhoto:
           type: string
-          description: Base64-encoded chat photo (if any).
+          description: Base64-encoded conversation photo (if any).
           example: "aGVsbG8="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
@@ -971,7 +964,7 @@ components:
           $ref: '#/components/schemas/Message'
         messages:
           type: array
-          description: List of messages in the chat.
+          description: List of messages in the conversation.
           minItems: 0
           maxItems: 1000
           items:
@@ -979,7 +972,7 @@ components:
 
     Message:
       type: object
-      description: A message sent in a chat.
+      description: A message sent in a conversation.
       required:
         - id
         - senderId
@@ -1087,11 +1080,11 @@ components:
       type: object
       description: Request schema for forwarding a message.
       required:
-        - targetChatId
+        - targetConversationId
       properties:
-        targetChatId:
+        targetConversationId:
           type: string
-          description: ID of the chat to which the message will be forwarded.
+          description: ID of the conversation to which the message will be forwarded.
           example: "conv456"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 1
@@ -1186,6 +1179,5 @@ components:
           example: "aGVsbG8="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
-
           maxLength: 1000000
 
