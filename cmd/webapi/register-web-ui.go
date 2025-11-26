@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
+	"github.com/nazerke1234/wasa/webui"
 )
 
 func registerWebUI(hdl http.Handler) (http.Handler, error) {
