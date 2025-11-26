@@ -28,7 +28,7 @@ func (rt *_router) commentMessage(
 	commentID, err := generateNewID()
 
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to generate chat ID")
+		ctx.Logger.WithError(err).Error("Failed to generate conversation ID")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
