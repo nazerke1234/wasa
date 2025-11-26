@@ -9,84 +9,84 @@ import (
 	"time"
 )
 
-func (db *appdbimpl) GetDirectChat(senderID, recipientID string) (string, error) {
-	var chatID string
+func (db *appdbimpl) GetDirectConversation(senderID, recipientID string) (string, error) {
+	var conversationID string
 	err := db.c.QueryRow(`
 		SELECT id
-		FROM chats
+		FROM conversations
 		WHERE type = 'direct'
 		  AND id IN (
-		      SELECT chatId FROM chat_members WHERE userId = ?
+		      SELECT conversationId FROM conversation_members WHERE userId = ?
 		      INTERSECT
-		      SELECT chatId FROM chat_members WHERE userId = ?
+		      SELECT conversationId FROM conversation_members WHERE userId = ?
 		  )
-	`, senderID, recipientID).Scan(&chatID)
+	`, senderID, recipientID).Scan(&conversationID)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
 	if err != nil {
-		return "", fmt.Errorf("error checking chat: %w", err)
+		return "", fmt.Errorf("error checking conversation: %w", err)
 	}
-	return chatID, nil
+	return conversationID, nil
 }
 
-func (db *appdbimpl) CreateDirectChat(chatID, senderID, recipientID string) error {
+func (db *appdbimpl) CreateDirectConversation(conversationID, senderID, recipientID string) error {
 	_, err := db.c.Exec(`
-		INSERT INTO chats (id, name, type, created_at, chatPhoto)
+		INSERT INTO conversations (id, name, type, created_at, conversationPhoto)
 		VALUES (?, '', 'direct', ?, '')
-	`, chatID, time.Now().Format(time.RFC3339))
+	`, conversationID, time.Now().Format(time.RFC3339))
 	if err != nil {
-		return fmt.Errorf("error creating new chat: %w", err)
+		return fmt.Errorf("error creating new conversation: %w", err)
 	}
 	_, err = db.c.Exec(`
-		INSERT INTO chat_members (chatId, userId)
+		INSERT INTO conversation_members (conversationId, userId)
 		VALUES (?, ?), (?, ?)
-	`, chatID, senderID,
-		chatID, recipientID)
+	`, conversationID, senderID,
+		conversationID, recipientID)
 	if err != nil {
-		return fmt.Errorf("error adding members to chat_members: %w", err)
+		return fmt.Errorf("error adding members to conversation_members: %w", err)
 	}
 	return nil
 }
 
 func (db *appdbimpl) SaveMessage(
-	chatID, senderID, messageID, content string, attachment []byte, replyTo string,
+	conversationID, senderID, messageID, content string, attachment []byte, replyTo string,
 ) (Message, error) {
-	var chatExists bool
-	err := db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM chats WHERE id = ?)`, chatID).Scan(&chatExists)
+	var conversationExists bool
+	err := db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM conversations WHERE id = ?)`, conversationID).Scan(&conversationExists)
 	if err != nil {
-		return Message{}, fmt.Errorf("error checking chat existence: %w", err)
+		return Message{}, fmt.Errorf("error checking conversation existence: %w", err)
 	}
-	if !chatExists {
-		return Message{}, ErrChatDoesNotExist
+	if !conversationExists {
+		return Message{}, ErrConversationDoesNotExist
 	}
 	timestamp := time.Now().Format(time.RFC3339)
 	_, err = db.c.Exec(`
-        INSERT INTO messages (id, chatId, senderId, content, timestamp, attachment, replyTo)
+        INSERT INTO messages (id, conversationId, senderId, content, timestamp, attachment, replyTo)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, messageID, chatID, senderID, content, timestamp, attachment, replyTo)
+    `, messageID, conversationID, senderID, content, timestamp, attachment, replyTo)
 	if err != nil {
 		return Message{}, fmt.Errorf("error saving message: %w", err)
 	}
 	return Message{
-		Id:         messageID,
-		ChatId:     chatID,
-		SenderId:   senderID,
-		Content:    content,
-		Timestamp:  timestamp,
-		Attachment: attachment,
-		ReplyTo:    replyTo,
+		Id:             messageID,
+		ConversationId: conversationID,
+		SenderId:       senderID,
+		Content:        content,
+		Timestamp:      timestamp,
+		Attachment:     attachment,
+		ReplyTo:        replyTo,
 	}, nil
 }
 
-func (db *appdbimpl) GetChatMembers(chatID string) ([]string, error) {
+func (db *appdbimpl) GetConversationMembers(conversationID string) ([]string, error) {
 	rows, err := db.c.Query(`
 		SELECT userId
-		FROM chat_members
-		WHERE chatId = ?
-	`, chatID)
+		FROM conversation_members
+		WHERE conversationId = ?
+	`, conversationID)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching chat members: %w", err)
+		return nil, fmt.Errorf("error fetching conversation members: %w", err)
 	}
 	defer rows.Close()
 	var members []string
@@ -114,55 +114,55 @@ func (db *appdbimpl) InsertDeliveryReceipt(messageID, userID, deliveredAt string
 	return nil
 }
 
-func (db *appdbimpl) IsUserInChat(chatID, userID string) (bool, error) {
+func (db *appdbimpl) IsUserInConversation(conversationID, userID string) (bool, error) {
 	var exists bool
 	err := db.c.QueryRow(`
 		SELECT EXISTS(
 			SELECT 1
-			FROM chat_members
-			WHERE chatId = ? AND userId = ?
+			FROM conversation_members
+			WHERE conversationId = ? AND userId = ?
 		)
-	`, chatID, userID).Scan(&exists)
+	`, conversationID, userID).Scan(&exists)
 	if err != nil {
 		return false, fmt.Errorf("error checking user membership: %w", err)
 	}
 	return exists, nil
 }
 
-func (db *appdbimpl) GetChatDetails(chatID, currentUserID string) (Chat, error) {
-	var chat Chat
+func (db *appdbimpl) GetConversationDetails(conversationID, currentUserID string) (Conversation, error) {
+	var conversation Conversation
 	var photoData []byte
 	err := db.c.QueryRow(`
-		SELECT id, name, type, created_at, chatPhoto
-		FROM chats
+		SELECT id, name, type, created_at, conversationPhoto
+		FROM conversations
 		WHERE id = ?
-	`, chatID).Scan(
-		&chat.Id,
-		&chat.Name,
-		&chat.Type,
-		&chat.CreatedAt,
+	`, conversationID).Scan(
+		&conversation.Id,
+		&conversation.Name,
+		&conversation.Type,
+		&conversation.CreatedAt,
 		&photoData,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return Chat{}, ErrChatDoesNotExist
+		return Conversation{}, ErrConversationDoesNotExist
 	}
 	if err != nil {
-		return Chat{}, fmt.Errorf("error fetching chat details: %w", err)
+		return Conversation{}, fmt.Errorf("error fetching conversation details: %w", err)
 	}
 	if len(photoData) > 0 {
-		chat.ChatPhoto = sql.NullString{
+		conversation.ConversationPhoto = sql.NullString{
 			String: base64.StdEncoding.EncodeToString(photoData),
 			Valid:  true,
 		}
 	} else {
-		chat.ChatPhoto = sql.NullString{Valid: false}
+		conversation.ConversationPhoto = sql.NullString{Valid: false}
 	}
-	members, err := db.GetChatMembers(chatID)
+	members, err := db.GetConversationMembers(conversationID)
 	if err != nil {
-		return Chat{}, fmt.Errorf("error fetching chat members: %w", err)
+		return Conversation{}, fmt.Errorf("error fetching conversation members: %w", err)
 	}
-	chat.Members = members
-	if chat.Type == "direct" {
+	conversation.Members = members
+	if conversation.Type == "direct" {
 		var otherUserID string
 		for _, m := range members {
 			if m != currentUserID {
@@ -174,26 +174,26 @@ func (db *appdbimpl) GetChatDetails(chatID, currentUserID string) (Chat, error) 
 			var userPhotoData []byte
 			err := db.c.QueryRow("SELECT photo FROM users WHERE id = ?", otherUserID).Scan(&userPhotoData)
 			if err == nil && len(userPhotoData) > 0 {
-				chat.ChatPhoto = sql.NullString{
+				conversation.ConversationPhoto = sql.NullString{
 					String: base64.StdEncoding.EncodeToString(userPhotoData),
 					Valid:  true,
 				}
 			}
 		}
 	}
-	messages, err := db.GetMessagesForChat(chatID)
+	messages, err := db.GetMessagesForConversation(conversationID)
 	if err != nil {
-		return Chat{}, fmt.Errorf("error fetching chat messages: %w", err)
+		return Conversation{}, fmt.Errorf("error fetching conversation messages: %w", err)
 	}
-	chat.Messages = messages
-	return chat, nil
+	conversation.Messages = messages
+	return conversation, nil
 }
 
-func (db *appdbimpl) GetMessagesForChat(chatID string) ([]Message, error) {
+func (db *appdbimpl) GetMessagesForConversation(conversationID string) ([]Message, error) {
 	query := `
 SELECT 
     m.id, 
-    m.chatId, 
+    m.conversationId, 
     m.senderId, 
     m.content, 
     m.timestamp, 
@@ -201,7 +201,7 @@ SELECT
     m.replyTo,
     u.name AS senderName,
     u.photo AS senderPhoto,
-    ((SELECT COUNT(*) FROM chat_members WHERE chatId = m.chatId) - 1) AS totalRecipients,
+    ((SELECT COUNT(*) FROM conversation_members WHERE conversationId = m.conversationId) - 1) AS totalRecipients,
     (SELECT COUNT(*) FROM read_receipts WHERE messageId = m.id AND readAt IS NOT NULL) AS readCount,
     COUNT(c.id) AS reaction_count,
     GROUP_CONCAT(DISTINCT u2.name) AS reacting_user_names,
@@ -214,11 +214,11 @@ LEFT JOIN comments c ON m.id = c.messageId
 LEFT JOIN users u2 ON c.authorId = u2.id
 LEFT JOIN messages r ON m.replyTo = r.id
 LEFT JOIN users ru ON r.senderId = ru.id
-WHERE m.chatId = ?
+WHERE m.conversationId = ?
 GROUP BY m.id
 ORDER BY m.timestamp ASC;
 `
-	rows, err := db.c.Query(query, chatID)
+	rows, err := db.c.Query(query, conversationID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching messages: %w", err)
 	}
@@ -231,7 +231,7 @@ ORDER BY m.timestamp ASC;
 		var reactingUserNames sql.NullString
 		err := rows.Scan(
 			&msg.Id,
-			&msg.ChatId,
+			&msg.ConversationId,
 			&msg.SenderId,
 			&msg.Content,
 			&msg.Timestamp,
@@ -272,7 +272,7 @@ ORDER BY m.timestamp ASC;
 	return messages, nil
 }
 
-func (db *appdbimpl) GetMyChats(userID string) ([]Chat, error) {
+func (db *appdbimpl) GetMyConversations(userID string) ([]Conversation, error) {
 	query := `
 	SELECT 
 		c.id,
@@ -280,45 +280,45 @@ func (db *appdbimpl) GetMyChats(userID string) ([]Chat, error) {
 			WHEN c.type = 'direct' THEN 
 				(SELECT u.name 
 				FROM users u 
-				JOIN chat_members cm2 
+				JOIN conversation_members cm2 
 				ON u.id = cm2.userId 
-				WHERE cm2.chatId = c.id AND u.id != ?)
+				WHERE cm2.conversationId = c.id AND u.id != ?)
 			ELSE c.name
-		END AS chat_name,
+		END AS conversation_name,
 		c.type,
 		c.created_at,
 		CASE 
 			WHEN c.type = 'direct' THEN 
 				(SELECT u.photo 
 				FROM users u 
-				JOIN chat_members cm2 
+				JOIN conversation_members cm2 
 				ON u.id = cm2.userId 
-				WHERE cm2.chatId = c.id AND u.id != ?)
-			ELSE c.chatPhoto
-		END AS chat_photo,
-		(SELECT m.id FROM messages m WHERE m.chatId = c.id ORDER BY m.timestamp DESC LIMIT 1) AS last_message_id,
-		(SELECT m.content FROM messages m WHERE m.chatId = c.id ORDER BY m.timestamp DESC LIMIT 1) AS last_message_content,
-		(SELECT m.timestamp FROM messages m WHERE m.chatId = c.id ORDER BY m.timestamp DESC LIMIT 1) AS last_message_timestamp,
+				WHERE cm2.conversationId = c.id AND u.id != ?)
+			ELSE c.conversationPhoto
+		END AS conversation_photo,
+		(SELECT m.id FROM messages m WHERE m.conversationId = c.id ORDER BY m.timestamp DESC LIMIT 1) AS last_message_id,
+		(SELECT m.content FROM messages m WHERE m.conversationId = c.id ORDER BY m.timestamp DESC LIMIT 1) AS last_message_content,
+		(SELECT m.timestamp FROM messages m WHERE m.conversationId = c.id ORDER BY m.timestamp DESC LIMIT 1) AS last_message_timestamp,
 		(SELECT u.name FROM messages m 
 		JOIN users u ON m.senderId = u.id 
-		WHERE m.chatId = c.id 
+		WHERE m.conversationId = c.id 
 		ORDER BY m.timestamp DESC LIMIT 1) AS last_message_sender_name,
 		(SELECT m.attachment FROM messages m   -- Fetch actual attachment data
-		WHERE m.chatId = c.id 
+		WHERE m.conversationId = c.id 
 		ORDER BY m.timestamp DESC LIMIT 1) AS last_message_attachment
-	FROM chats c
-	JOIN chat_members cm ON c.id = cm.chatId
+	FROM conversations c
+	JOIN conversation_members cm ON c.id = cm.conversationId
 	WHERE cm.userId = ?
 	ORDER BY last_message_timestamp DESC NULLS LAST;
     `
 	rows, err := db.c.Query(query, userID, userID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching chats: %w", err)
+		return nil, fmt.Errorf("error fetching conversations: %w", err)
 	}
 	defer rows.Close()
-	var chats []Chat
+	var conversations []Conversation
 	for rows.Next() {
-		var conv Chat
+		var conv Conversation
 		var (
 			lastMessageID         sql.NullString
 			lastMessageContent    sql.NullString
@@ -340,11 +340,11 @@ func (db *appdbimpl) GetMyChats(userID string) ([]Chat, error) {
 			&lastMessageAttachment,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error scanning chat: %w", err)
+			return nil, fmt.Errorf("error scanning conversation: %w", err)
 		}
 		if convPhoto.Valid {
-			conv.ChatPhoto.String = base64.StdEncoding.EncodeToString([]byte(convPhoto.String))
-			conv.ChatPhoto.Valid = true
+			conv.ConversationPhoto.String = base64.StdEncoding.EncodeToString([]byte(convPhoto.String))
+			conv.ConversationPhoto.Valid = true
 		}
 		if lastMessageID.Valid {
 			conv.LastMessage = &Message{
@@ -355,26 +355,26 @@ func (db *appdbimpl) GetMyChats(userID string) ([]Chat, error) {
 				Attachment: lastMessageAttachment,
 			}
 		}
-		members, err := db.GetChatMembers(conv.Id)
+		members, err := db.GetConversationMembers(conv.Id)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching chat members: %w", err)
+			return nil, fmt.Errorf("error fetching conversation members: %w", err)
 		}
 		conv.Members = members
-		chats = append(chats, conv)
+		conversations = append(conversations, conv)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating over rows: %w", err)
 	}
-	return chats, nil
+	return conversations, nil
 }
 
-func (db *appdbimpl) DeleteMessage(chatID, messageID, userID string) error {
+func (db *appdbimpl) DeleteMessage(conversationID, messageID, userID string) error {
 	var senderID string
 	err := db.c.QueryRow(`
 		SELECT senderId
 		FROM messages
-		WHERE chatId = ? AND id = ?
-	`, chatID, messageID).Scan(&senderID)
+		WHERE conversationId = ? AND id = ?
+	`, conversationID, messageID).Scan(&senderID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrMessageDoesNotExist
 	}
@@ -386,8 +386,8 @@ func (db *appdbimpl) DeleteMessage(chatID, messageID, userID string) error {
 	}
 	_, err = db.c.Exec(`
 		DELETE FROM messages
-		WHERE chatId = ? AND id = ?
-	`, chatID, messageID)
+		WHERE conversationId = ? AND id = ?
+	`, conversationID, messageID)
 	if err != nil {
 		return fmt.Errorf("error deleting message: %w", err)
 	}
@@ -399,7 +399,7 @@ func (db *appdbimpl) GetMessage(messageID, userID string) (Message, error) {
 	err := db.c.QueryRow(`
         SELECT 
             m.id, 
-            m.chatId, 
+            m.conversationId, 
             m.senderId, 
             m.content, 
             m.timestamp, 
@@ -410,12 +410,12 @@ func (db *appdbimpl) GetMessage(messageID, userID string) (Message, error) {
         JOIN 
             users u ON m.senderId = u.id
         JOIN 
-            chat_members cm ON m.chatId = cm.chatId
+            conversation_members cm ON m.conversationId = cm.conversationId
         WHERE 
             m.id = ? AND cm.userId = ?
     `, messageID, userID).Scan(
 		&message.Id,
-		&message.ChatId,
+		&message.ConversationId,
 		&message.SenderId,
 		&message.Content,
 		&message.Timestamp,
@@ -431,13 +431,13 @@ func (db *appdbimpl) GetMessage(messageID, userID string) (Message, error) {
 	return message, nil
 }
 
-func (db *appdbimpl) MarkMessagesAsRead(chatID, userID string) error {
+func (db *appdbimpl) MarkMessagesAsRead(conversationID, userID string) error {
 	_, err := db.c.Exec(`
         UPDATE read_receipts
         SET readAt = CURRENT_TIMESTAMP
-        WHERE messageId IN (SELECT id FROM messages WHERE chatId = ?)
+        WHERE messageId IN (SELECT id FROM messages WHERE conversationId = ?)
           AND userId = ?
           AND readAt IS NULL
-    `, chatID, userID)
+    `, conversationID, userID)
 	return err
 }
