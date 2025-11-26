@@ -31,9 +31,7 @@ import (
 
 func main() {
 	var port = flag.Int("port", 3000, "HTTP port for healthcheck")
-
 	flag.Parse()
-
 	res, err := http.Get(fmt.Sprintf("http://localhost:%d/liveness", *port))
 	if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err.Error())
