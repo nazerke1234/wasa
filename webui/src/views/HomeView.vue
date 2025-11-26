@@ -79,7 +79,7 @@ export default {
           this.$router.push({ path: "/" });
           return;
         }
-        const response = await this.$axios.get("/chats", {
+        const response = await this.$axios.get("/conversations", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -92,10 +92,10 @@ export default {
         this.loading = false;
       }
     },
-    viewConversation(chatId, conversationName) {
+    viewConversation(conversationId, conversationName) {
       localStorage.setItem("conversationName", conversationName);
       this.$router.push({
-        path: `/chats/${chatId}`,
+        path: `/conversations/${conversationId}`,
       });
     },
     truncateText(text, length = 50, clamp = '...') {
@@ -204,5 +204,6 @@ export default {
   }
 }
 </style>
+
 
 
