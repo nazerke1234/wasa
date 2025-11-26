@@ -14,20 +14,20 @@ type Group struct {
 	Photo []byte `json:"photo,omitempty"`
 }
 
-type Chat struct {
-	Id          string         `json:"id"`
-	Name        string         `json:"name"`
-	Type        string         `json:"type"`
-	CreatedAt   string         `json:"createdAt"`
-	Members     []string       `json:"members"`
-	LastMessage *Message       `json:"lastMessage,omitempty"`
-	Messages    []Message      `json:"messages,omitempty"`
-	ChatPhoto   sql.NullString `json:"chatPhoto,omitempty"`
+type Conversation struct {
+	Id                string         `json:"id"`
+	Name              string         `json:"name"`
+	Type              string         `json:"type"`
+	CreatedAt         string         `json:"createdAt"`
+	Members           []string       `json:"members"`
+	LastMessage       *Message       `json:"lastMessage,omitempty"`
+	Messages          []Message      `json:"messages,omitempty"`
+	ConversationPhoto sql.NullString `json:"conversationPhoto,omitempty"`
 }
 
 type Message struct {
 	Id                string   `json:"id"`
-	ChatId            string   `json:"chatId"`
+	ConversationId    string   `json:"conversationId"`
 	SenderId          string   `json:"senderId"`
 	SenderName        string   `json:"senderName"`
 	Content           string   `json:"content"`
