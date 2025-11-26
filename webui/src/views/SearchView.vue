@@ -58,7 +58,7 @@ import axios from "../services/axios";
 import LoadingSpinner from "../components/LoadingSpinner.vue";
 
 export default {
-  name: "SearchView",
+  name: "SearchPeopleView",
   components: {
     LoadingSpinner,
   },
@@ -103,11 +103,11 @@ export default {
       localStorage.setItem("conversationName", recipientName);
       const senderId = localStorage.getItem("token");
       axios
-        .post(`/chats`, { senderId, recipientId })
+        .post(`/conversations`, { senderId, recipientId })
         .then((response) => {
           const conversationId = response.data.conversationId;
           this.$router.push({
-            path: `/chats/${conversationId}`
+            path: `/conversations/${conversationId}`
           });
         })
         .catch((error) => {
