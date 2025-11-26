@@ -6,66 +6,6 @@ import (
 	"fmt"
 )
 
-var ErrUserDoesNotExist = errors.New("User does not exist")
-var ErrConversationDoesNotExist = errors.New("Conversation does not exist")
-var ErrMessageDoesNotExist = errors.New("Message does not exist")
-var ErrCommentDoesNotExist = errors.New("Comment does not exist")
-var ErrUnauthorizedToDeleteMessage = errors.New("Unauthorized To Delete Message")
-var ErrGroupDoesNotExist = errors.New("Group does not exist")
-
-type User struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Photo []byte `json:"photo,omitempty"`
-}
-
-type Group struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Photo []byte `json:"photo,omitempty"`
-}
-
-type Conversation struct {
-	Id                string         `json:"id"`
-	Name              string         `json:"name"`
-	Type              string         `json:"type"`
-	CreatedAt         string         `json:"createdAt"`
-	Members           []string       `json:"members"`
-	LastMessage       *Message       `json:"lastMessage,omitempty"`
-	Messages          []Message      `json:"messages,omitempty"`
-	ConversationPhoto sql.NullString `json:"conversationPhoto,omitempty"`
-}
-
-type Message struct {
-	Id                string   `json:"id"`
-	ConversationId    string   `json:"conversationId"`
-	SenderId          string   `json:"senderId"`
-	SenderName        string   `json:"senderName"`
-	Content           string   `json:"content"`
-	Timestamp         string   `json:"timestamp"`
-	Attachment        []byte   `json:"attachment"`
-	SenderPhoto       string   `json:"senderPhoto,omitempty"`
-	ReactionCount     int      `json:"reactionCount"`
-	ReactingUserNames []string `json:"reactingUserNames"`
-	Status            string   `json:"status"`
-	ReplyTo           string   `json:"replyTo,omitempty"`
-	ReplyContent      string   `json:"replyContent,omitempty"`
-	ReplySenderName   string   `json:"replySenderName,omitempty"`
-	ReplyAttachment   []byte   `json:"replyAttachment,omitempty"`
-}
-
-type Comment struct {
-	Id       string `json:"id"`
-	AuthorId string `json:"authorId"`
-}
-
-type ReadReceipt struct {
-	MessageId   string  `json:"messageId"`
-	UserId      string  `json:"userId"`
-	DeliveredAt string  `json:"deliveredAt"`
-	ReadAt      *string `json:"readAt,omitempty"`
-}
-
 type AppDatabase interface {
 	Ping() error
 	GetUserByName(name string) (User, error)
