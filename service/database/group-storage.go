@@ -8,34 +8,34 @@ import (
 	"time"
 )
 
-func (db *appdbimpl) CreateGroupChat(chatID string, memberIDs []string, name string, photo []byte) error {
+func (db *appdbimpl) CreateGroupConversation(conversationID string, memberIDs []string, name string, photo []byte) error {
 	_, err := db.c.Exec(`
-        INSERT INTO chats (id, name, type, created_at, chatPhoto)
+        INSERT INTO conversations (id, name, type, created_at, conversationPhoto)
         VALUES (?, ?, 'group', ?, ?)
-    `, chatID, name, time.Now().Format(time.RFC3339), photo)
+    `, conversationID, name, time.Now().Format(time.RFC3339), photo)
 	if err != nil {
-		return fmt.Errorf("error creating new chat: %w", err)
+		return fmt.Errorf("error creating new conversation: %w", err)
 	}
 	for _, memberID := range memberIDs {
 		_, err = db.c.Exec(`
-            INSERT INTO chat_members (chatId, userId)
+            INSERT INTO conversation_members (conversationId, userId)
             VALUES (?, ?)
-        `, chatID, memberID)
+        `, conversationID, memberID)
 		if err != nil {
-			return fmt.Errorf("error adding member %s to chat_members: %w", memberID, err)
+			return fmt.Errorf("error adding member %s to conversation_members: %w", memberID, err)
 		}
 	}
 	return nil
 }
 
-func (db *appdbimpl) GetMyGroups(userID string) ([]Chat, error) {
+func (db *appdbimpl) GetMyGroups(userID string) ([]Conversation, error) {
 	query := `
     SELECT 
         c.id,
         c.name,
-        c.chatPhoto as photo
-    FROM chats c
-    JOIN chat_members cm ON c.id = cm.chatId
+        c.conversationPhoto as photo
+    FROM conversations c
+    JOIN conversation_members cm ON c.id = cm.conversationId
     WHERE cm.userId = ? AND c.type = 'group'
     ORDER BY c.created_at DESC;
     `
@@ -44,9 +44,9 @@ func (db *appdbimpl) GetMyGroups(userID string) ([]Chat, error) {
 		return nil, fmt.Errorf("error fetching groups: %w", err)
 	}
 	defer rows.Close()
-	var groups []Chat
+	var groups []Conversation
 	for rows.Next() {
-		var group Chat
+		var group Conversation
 		var photo sql.NullString
 		err := rows.Scan(
 			&group.Id,
@@ -57,10 +57,10 @@ func (db *appdbimpl) GetMyGroups(userID string) ([]Chat, error) {
 			return nil, fmt.Errorf("error scanning group: %w", err)
 		}
 		if photo.Valid {
-			group.ChatPhoto.String = base64.StdEncoding.EncodeToString([]byte(photo.String))
-			group.ChatPhoto.Valid = true
+			group.ConversationPhoto.String = base64.StdEncoding.EncodeToString([]byte(photo.String))
+			group.ConversationPhoto.Valid = true
 		} else {
-			group.ChatPhoto = sql.NullString{String: "", Valid: false}
+			group.ConversationPhoto = sql.NullString{String: "", Valid: false}
 		}
 		groups = append(groups, group)
 	}
@@ -70,17 +70,17 @@ func (db *appdbimpl) GetMyGroups(userID string) ([]Chat, error) {
 	return groups, nil
 }
 
-func (db *appdbimpl) GetGroupInfo(groupID string) (Chat, error) {
-	var group Chat
+func (db *appdbimpl) GetGroupInfo(groupID string) (Conversation, error) {
+	var group Conversation
 	var photo []byte
 	var membersCSV sql.NullString
 	err := db.c.QueryRow(`
         SELECT 
             c.id,
             c.name,
-            c.chatPhoto,
-            (SELECT GROUP_CONCAT(userId) FROM chat_members WHERE chatId = c.id) AS members
-        FROM chats c
+            c.conversationPhoto,
+            (SELECT GROUP_CONCAT(userId) FROM conversation_members WHERE conversationId = c.id) AS members
+        FROM conversations c
         WHERE c.id = ? AND c.type = 'group'`,
 		groupID,
 	).Scan(
@@ -90,18 +90,18 @@ func (db *appdbimpl) GetGroupInfo(groupID string) (Chat, error) {
 		&membersCSV,
 	)
 	if err == sql.ErrNoRows {
-		return Chat{}, ErrGroupDoesNotExist
+		return Conversation{}, ErrGroupDoesNotExist
 	}
 	if err != nil {
-		return Chat{}, fmt.Errorf("error fetching group by ID: %w", err)
+		return Conversation{}, fmt.Errorf("error fetching group by ID: %w", err)
 	}
 	if len(photo) > 0 {
-		group.ChatPhoto = sql.NullString{
+		group.ConversationPhoto = sql.NullString{
 			String: base64.StdEncoding.EncodeToString(photo),
 			Valid:  true,
 		}
 	} else {
-		group.ChatPhoto = sql.NullString{Valid: false}
+		group.ConversationPhoto = sql.NullString{Valid: false}
 	}
 	if membersCSV.Valid {
 		group.Members = strings.Split(membersCSV.String, ",")
@@ -112,7 +112,7 @@ func (db *appdbimpl) GetGroupInfo(groupID string) (Chat, error) {
 }
 
 func (db *appdbimpl) UpdateGroupName(groupId, newName string) error {
-	res, err := db.c.Exec(`UPDATE chats SET name=? WHERE id=?`, newName, groupId)
+	res, err := db.c.Exec(`UPDATE conversations SET name=? WHERE id=?`, newName, groupId)
 	if err != nil {
 		return err
 	}
@@ -127,14 +127,14 @@ func (db *appdbimpl) UpdateGroupName(groupId, newName string) error {
 
 func (db *appdbimpl) UpdateGroupPhoto(groupID string, photo []byte) error {
 	var exists bool
-	err := db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM chats WHERE id=?)`, groupID).Scan(&exists)
+	err := db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM conversations WHERE id=?)`, groupID).Scan(&exists)
 	if err != nil {
 		return err
 	}
 	if !exists {
 		return ErrGroupDoesNotExist
 	}
-	_, err = db.c.Exec(`UPDATE chats SET chatPhoto=? WHERE id=?`, photo, groupID)
+	_, err = db.c.Exec(`UPDATE conversations SET conversationPhoto=? WHERE id=?`, photo, groupID)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (db *appdbimpl) UpdateGroupPhoto(groupID string, photo []byte) error {
 
 func (db *appdbimpl) LeaveGroup(groupID, userID string) error {
 	_, err := db.c.Exec(`
-	DELETE FROM chat_members WHERE chatId = ? AND userId = ?
+	DELETE FROM conversation_members WHERE conversationId = ? AND userId = ?
 	`, groupID, userID)
 	if err != nil {
 		return fmt.Errorf("error leaving group: %w", err)
@@ -151,10 +151,10 @@ func (db *appdbimpl) LeaveGroup(groupID, userID string) error {
 	return nil
 }
 
-func (db *appdbimpl) AddUserToGroup(chatID string, userID string) error {
+func (db *appdbimpl) AddUserToGroup(conversationID string, userID string) error {
 	_, err := db.c.Exec(
-		"INSERT INTO chat_members (chatId, userId) VALUES (?, ?)",
-		chatID, userID,
+		"INSERT INTO conversation_members (conversationId, userId) VALUES (?, ?)",
+		conversationID, userID,
 	)
 	if err != nil {
 		return fmt.Errorf("error adding user to group: %w", err)
