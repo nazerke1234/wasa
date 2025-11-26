@@ -42,21 +42,21 @@ func (rt *_router) createGroup(
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	chatID, err := generateNewID()
+	conversationID, err := generateNewID()
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to generate chat ID")
+		ctx.Logger.WithError(err).Error("Failed to generate conversation ID")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	err = rt.db.CreateGroupChat(chatID, members, name, photo)
+	err = rt.db.CreateGroupConversation(conversationID, members, name, photo)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to create new chat")
+		ctx.Logger.WithError(err).Error("Failed to create new conversation")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]string{
-		"chatId": chatID,
+		"conversationId": conversationID,
 	}); err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode response")
 	}
@@ -73,15 +73,15 @@ func (rt *_router) getMyGroups(
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	chats, err := rt.db.GetMyGroups(userID)
+	conversations, err := rt.db.GetMyGroups(userID)
 	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to fetch user's chats")
+		ctx.Logger.WithError(err).Error("Failed to fetch user's conversations")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(chats); err != nil {
-		ctx.Logger.WithError(err).Error("Failed to encode chats")
+	if err := json.NewEncoder(w).Encode(conversations); err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode conversations")
 	}
 }
 
@@ -112,8 +112,8 @@ func (rt *_router) getGroup(
 		"name":    group.Name,
 		"members": group.Members,
 	}
-	if group.ChatPhoto.Valid {
-		response["groupPhoto"] = group.ChatPhoto.String
+	if group.ConversationPhoto.Valid {
+		response["groupPhoto"] = group.ConversationPhoto.String
 	}
 
 	w.Header().Set("Content-Type", "application/json")
