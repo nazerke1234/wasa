@@ -15,7 +15,7 @@ tags:
     description: Operations related to user login
   - name: user
     description: Operations related to user management
-  - name: chat
+  - name: conversation
     description: Operations related to chats
   - name: message
     description: Operations related to messages
@@ -1180,4 +1180,5 @@ components:
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 1000000
+
 
