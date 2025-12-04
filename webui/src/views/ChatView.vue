@@ -320,7 +320,7 @@ export default {
         return;
       }
       const conversationResponse = await axios.post(
-        `/chats`,
+        `/conversations`,
         { senderId: token, recipientId: selectedContactId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -649,4 +649,3 @@ export default {
   }
 }
 </style>
-
