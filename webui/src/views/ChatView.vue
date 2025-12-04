@@ -172,7 +172,7 @@ export default {
       if (this.selectedFile) {
         formData.append("attachment", this.selectedFile);
       }
-      await axios.post(`/chats/${this.conversationId}/message`, formData, {
+      await axios.post(`/conversations/${this.conversationId}/message`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       this.message = "";
@@ -327,7 +327,7 @@ export default {
       const targetConversationId = conversationResponse.data.conversationId;
       const forwarderName = localStorage.getItem("name") || "Unknown";
       await axios.post(
-        `/chats/${this.conversationId}/message/${messageId}/forward`,
+        `/conversations/${this.conversationId}/message/${messageId}/forward`,
         { sourceMessageId: messageId, targetConversationId: targetConversationId, forwarderName: forwarderName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -340,7 +340,7 @@ export default {
       const token = localStorage.getItem("token");
       const forwarderName = localStorage.getItem("name") || "Unknown";
       await axios.post(
-        `/chats/${this.conversationId}/message/${messageId}/forward`,
+        `/conversations/${this.conversationId}/message/${messageId}/forward`,
         { targetConversationId: targetConversationId, forwarderName: forwarderName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -649,3 +649,4 @@ export default {
   }
 }
 </style>
+
