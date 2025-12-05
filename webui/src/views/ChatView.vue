@@ -134,6 +134,7 @@ export default {
     return {
       message: "",
       messages: [],
+      conversations: [],
       userToken: localStorage.getItem("token"),
       convName: localStorage.getItem("conversationName") || "Unknown User",
       conversationPhoto: null,
@@ -152,6 +153,20 @@ export default {
     }
   },
   methods: {
+  async fetchMyConversations() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await axios.get('/myConversations', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      this.conversations = response.data;
+    } catch (err) {
+      console.error("Failed to fetch conversations", err);
+    }
+  },
+
     triggerFileInput() {
       this.$refs.fileInput.click();
     },
@@ -288,12 +303,10 @@ export default {
       }
     },
     async fetchForwardConversations(messageId) {
-      const token = localStorage.getItem("token");
-      const response = await axios.get('/conversations', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const conversations = response.data.filter(conv => conv.id !== this.conversationId);
-      this.messageOptions[messageId].forwardConversations = conversations;
+      if (!this.conversations.length) await this.fetchMyConversations();
+      const otherConversations = this.conversations.filter(conv => conv.id !== this.conversationId);
+      this.messageOptions[messageId].forwardConversations = otherConversations;
+      
     },
     async searchContact(messageId) {
       const query = this.messageOptions[messageId].contactQuery;
@@ -356,6 +369,7 @@ export default {
   },
   mounted() {
     this.fetchMessages();
+    this.fetchMyConversations();
     this.pollIntervalId = setInterval(() => {
       this.fetchMessages();
     }, 5000);
@@ -649,3 +663,4 @@ export default {
   }
 }
 </style>
+
