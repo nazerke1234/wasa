@@ -10,6 +10,7 @@ You can start private one-on-one chats or create group conversations, share imag
 
 ## Tools
  **Backend**: The backend is built with Go, handling the core business logic and serving the API. It uses SQLite as an embedded database, httprouter for lightweight routing, logrus for structured logging, and uuid to generate unique identifiers.
+ 
  **Frontend**: The frontend is developed with Vue.js, providing a reactive user interface. Vue Router enables smooth single-page application navigation, while Axios handles API requests. The design is made responsive using Bootstrap alongside custom CSS.
 ## How to setup and run the application:
 
