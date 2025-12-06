@@ -12,17 +12,17 @@ info:
 
 tags:
   - name: login
-    description: Operations related to user login
-  - name: user
-    description: Operations related to user management
-  - name: conversation
-    description: Operations related to chats
+    description: Handles user sign-in and authentication requests
   - name: message
-    description: Operations related to messages
+    description: Responsible for sending, retrieving, and managing chat messages
   - name: comment
-    description: Operations related to comments
+    description: Supports adding, viewing, and interacting with comments
   - name: group
-    description: Operations related to groups
+    description: Manages group creation, membership, and interactions
+  - name: user
+    description: Manages user accounts, profiles, and user-related actions
+  - name: conversation
+    description: Provides functionality for individual conversations and chat sessions
 
 security:
   - BearerAuth: []
@@ -32,10 +32,10 @@ paths:
     post:
       tags:
         - login
-      summary: Logs in the user
+      summary: Authenticates the user
       description: |-
-        If the user does not exist, it will be created and an identifier is returned.
-        If the user exists, the user identifier is returned.
+        If there is a no such user, then unique identifier is provided.
+        If the account exists, the identifier for that user is returned.
       operationId: doLogin
       security: []
       requestBody:
@@ -47,57 +47,57 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '201':
-          description: User log-in action successful
+          description: Login completed successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
               example:
-                identifier: "abcdef012345"
+                identifier: "user123456abc"
 
   /users/photo:
     get:
       tags:
         - user
-      summary: Retrieves the authenticated user's photo
-      description: Returns the full User object (id, name, and photo in base64)
+      summary: Fetches the photo of the currently logged-in user
+      description: Returns the full User object (id, name and photo in base64)
       operationId: getMyPhoto
       security:
         - BearerAuth: []
       responses:
         '200':
-          description: User photo fetched successfully
+          description: User photo fetched successfully.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
               example:
                 id: "user123"
-                name: "Maria"
-                photo: "aGVsbG8="
+                name: "Nazerke"
+                photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
     put:
       tags:
         - user
-      summary: Updates the authenticated user's photo
-      description: Updates the user's photo and returns the updated User object
+      summary: Updates the profile photo of the authenticated user
+      description: Saves the new photo and returns the updated user details
       operationId: setMyPhoto
       security:
         - BearerAuth: []
       requestBody:
-        description: New photo (JPEG or PNG) as a base64-encoded string
+        description: New photo (JPEG or PNG) in base64
         required: true
         content:
           image/png:
             schema:
               type: string
-              description: PNG image file (base64 encoded)
+              description: PNG image file (base64)
               pattern: '^[A-Za-z0-9+/]+={0,2}$'
               minLength: 1
               maxLength: 10485760
           image/jpeg:
             schema:
               type: string
-              description: JPEG image file (base64 encoded)
+              description: JPEG image file (base64)
               pattern: '^[A-Za-z0-9+/]+={0,2}$'
               minLength: 1
               maxLength: 10485760
@@ -110,14 +110,14 @@ paths:
                 $ref: '#/components/schemas/User'
               example:
                 id: "user123"
-                name: "Maria"
-                photo: "aGVsbG8="
+                name: "Nazerke"
+                photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
 
   /users/name:
     put:
       tags:
         - user
-      summary: Updates the authenticated user's username
+      summary: Changes the username of the logged-in user
       description: Updates the user's username
       operationId: setMyUserName
       security:
@@ -139,20 +139,20 @@ paths:
               example:
                 id: "user123"
                 name: "NewName"
-                photo: "aGVsbG8="
+                photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
 
   /conversations:
     get:
       tags:
         - conversation
-      summary: Retrieves the list of conversations for the authenticated user
-      description: Retrieves conversations.
+      summary: Returns all conversations associated with the logged-in user
+      description: Fetches conversations.
       operationId: getMyConversations
       security:
         - BearerAuth: []
       responses:
         '200':
-          description: List of conversations
+          description: Successfully returns the user's conversations
           content:
             application/json:
               schema:
@@ -175,13 +175,13 @@ paths:
                     members:
                       - "user123"
                       - "user456"
-                    conversationPhoto: "aGVsbG8="
+                    conversationPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
                     lastMessage:
-                      id: "msg789"
+                      id: "message123"
                       senderId: "user456"
-                      senderName: "Alice"
+                      senderName: "Aruzhan"
                       content: "Hello!"
-                      timestamp: "2023-10-20T10:00:00Z"
+                      timestamp: "2025-11-20T10:00:00Z"
                       attachment: ""
                       reactionCount: 0
                       reactingUserIds: []
@@ -189,18 +189,18 @@ paths:
       tags:
         - conversation
       summary: Starts a new direct conversation
-      description: Creates a new direct conversation between two users if one does not exist and returns the canonical conversation details.
+      description: Creates a direct one-on-one conversation between two users if it doesn’t already exist, then returns its details.
       operationId: startConversation
       security:
         - BearerAuth: []
       requestBody:
-        description: JSON payload with sender and recipient IDs.
+        description: JSON object that contains the sender and receiver identifiers.
         required: true
         content:
           application/json:
             schema:
               type: object
-              description: Payload to start a direct conversation.
+              description: Data required to start a direct chat.
               required:
                 - senderId
                 - recipientId
@@ -221,7 +221,7 @@ paths:
                   maxLength: 50
       responses:
         '201':
-          description: Conversation started successfully and returns the canonical conversation details.
+          description: Conversation was created successfully and conversation data is returned.
           content:
             application/json:
               schema:
@@ -232,13 +232,13 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                conversationPhoto: "aGVsbG8="
+                conversationPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
                 lastMessage:
-                  id: "msg789"
+                  id: "message789"
                   senderId: "user456"
-                  senderName: "Alice"
+                  senderName: "Aruzhan"
                   content: "Hello!"
-                  timestamp: "2023-10-20T10:00:00Z"
+                  timestamp: "2025-11-20T10:00:00Z"
                   attachment: ""
                   reactionCount: 0
                   reactingUserIds: []
@@ -248,8 +248,8 @@ paths:
     get:
       tags:
         - conversation
-      summary: Retrieves details of a specific conversation
-      description: Retrieves conversation details.
+      summary: Fetches details of a specific conversation by ID
+      description: Fetches conversation details.
       operationId: getConversation
       security:
         - BearerAuth: []
@@ -276,13 +276,13 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                conversationPhoto: "aGVsbG8="
+                conversationPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
                 lastMessage:
-                  id: "msg789"
+                  id: "message789"
                   senderId: "user456"
-                  senderName: "Alice"
+                  senderName: "Aruzhan"
                   content: "Hello!"
-                  timestamp: "2023-10-20T10:00:00Z"
+                  timestamp: "2025-11-20T10:00:00Z"
                   attachment: ""
                   reactionCount: 0
                   reactingUserIds: []
@@ -292,7 +292,7 @@ paths:
     post:
       tags:
         - message
-      summary: Sends a message in a conversation
+      summary: Creates and sends a message in a conversation
       description: Sends a message using multipart/form-data.
       operationId: sendMessage
       security:
@@ -308,7 +308,7 @@ paths:
             minLength: 1
             maxLength: 50
       requestBody:
-        description: Form data containing message content and an optional attachment.
+        description: Form data containing message content and an attachment if needed.
         required: true
         content:
           multipart/form-data:
@@ -325,7 +325,7 @@ paths:
                   maxLength: 1000
                 attachment:
                   type: string
-                  description: Optional image attachment (JPEG, PNG, or GIF), base64 encoded.
+                  description: Optional image attachment (JPEG, PNG, or GIF) in base64.
                   example: ""
                   pattern: '^[A-Za-z0-9+/]*={0,2}$'
                   minLength: 0
@@ -338,11 +338,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Message'
               example:
-                id: "msg123"
+                id: "message123"
                 senderId: "user123"
-                senderName: "Maria"
+                senderName: "Nazerke"
                 content: "Hello, world!"
-                timestamp: "2023-10-20T10:05:00Z"
+                timestamp: "2025-11-20T10:05:00Z"
                 attachment: ""
                 reactionCount: 0
                 reactingUserIds: []
@@ -351,8 +351,8 @@ paths:
     post:
       tags:
         - message
-      summary: Forwards an existing message to another conversation
-      description: Forwards a message to another conversation.
+      summary: Sends an existing message to a different conversation.
+      description: Forwards a specific message from one conversation to another.
       operationId: forwardMessage
       security:
         - BearerAuth: []
@@ -360,7 +360,7 @@ paths:
         - name: conversationId
           in: path
           required: true
-          description: ID of the conversation containing the message to forward.
+          description: ID of the conversation that contains the message to be forwarded.
           schema:
             type: string
             pattern: '^[a-zA-Z0-9_]+$'
@@ -369,14 +369,14 @@ paths:
         - name: messageId
           in: path
           required: true
-          description: ID of the message to forward.
+          description: ID of the message to be forwarded.
           schema:
             type: string
             pattern: '^[a-zA-Z0-9_]+$'
             minLength: 1
             maxLength: 50
       requestBody:
-        description: JSON payload specifying the target conversation ID.
+        description: JSON payload with target conversation ID.
         required: true
         content:
           application/json:
@@ -392,11 +392,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Message'
               example:
-                id: "msg999"
+                id: "message111"
                 senderId: "user123"
-                senderName: "Maria"
+                senderName: "Nazerke"
                 content: "Hello, world!"
-                timestamp: "2023-10-20T10:05:00Z"
+                timestamp: "2025-11-20T10:05:00Z"
                 attachment: ""
                 reactionCount: 0
                 reactingUserIds: []
@@ -447,7 +447,7 @@ paths:
       - name: messageId
         in: path
         required: true
-        description: ID of the message to comment on.
+        description: ID of the message to be commented.
         schema:
           type: string
           pattern: '^[a-zA-Z0-9_]+$'
@@ -457,7 +457,7 @@ paths:
       tags:
         - comment
       summary: Adds a comment to a message
-      description: Adds a comment to the specified message.
+      description: Adds a comment to the messageID specified.
       operationId: commentMessage
       security:
         - BearerAuth: []
@@ -475,7 +475,7 @@ paths:
       tags:
         - comment
       summary: Removes a comment from a message
-      description: Deletes a comment from the specified message.
+      description: Deletes a comment from the specified messageID.
       operationId: uncommentMessage
       security:
         - BearerAuth: []
@@ -488,8 +488,8 @@ paths:
       tags:
         - conversation
         - user
-      summary: Searches for users by username
-      description: Searches for users matching a query string.
+      summary: Searches the users by username
+      description: Searches the users by matching with query.
       operationId: searchUsers
       security:
         - BearerAuth: []
@@ -505,7 +505,7 @@ paths:
             maxLength: 50
       responses:
         '200':
-          description: Array of users matching the query.
+          description: a list of users that match the query.
           content:
             application/json:
               schema:
@@ -517,15 +517,15 @@ paths:
                   $ref: '#/components/schemas/User'
               example:
                 - id: "user123"
-                  name: "Maria"
-                  photo: "aGVsbG8="
+                  name: "Nazerke"
+                  photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
 
   /groups:
     get:
       tags:
         - group
       summary: Retrieves the list of groups for the authenticated user
-      description: Retrieves groups.
+      description: Fetches groups.
       operationId: getMyGroups
       security:
         - BearerAuth: []
@@ -554,20 +554,18 @@ paths:
                     members:
                       - "user123"
                       - "user456"
-                    groupPhoto: "aGVsbG8="
+                    groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
     post:
       tags:
         - group
       summary: Creates a new group
       description: |-
-        Creates a new group conversation.
-        Expects multipart/form-data with fields for group name, a JSON string of member IDs (in property "membersJson"),
-        and a group image.
+        Creates a new group chat. The request should use multipart/form-data including the group name, a JSON string of member IDs (under membersJson), and a group image.
       operationId: createGroup
       security:
         - BearerAuth: []
       requestBody:
-        description: Group creation data.
+        description: data needed to create the group
         required: true
         content:
           multipart/form-data:
@@ -591,14 +589,14 @@ paths:
                   maxLength: 1000
                 image:
                   type: string
-                  description: Group image (JPEG or PNG) as a base64 encoded string.
-                  example: "aGVsbG8="
+                  description: Group image (JPEG or PNG) in basr 64.
+                  example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
                   pattern: '^[A-Za-z0-9+/]*={0,2}$'
                   minLength: 1
                   maxLength: 10485760
       responses:
         '201':
-          description: Group created successfully and returns the canonical Group object.
+          description: Group created successfully and returns the complete group object with its ID, name, members, and group photo.
           content:
             application/json:
               schema:
@@ -609,14 +607,14 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                groupPhoto: "aGVsbG8="
+                groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
 
   /groups/{groupId}:
     get:
       tags:
         - group
-      summary: Retrieves details of a specific group
-      description: Retrieves group details including members and group photo.
+      summary: Fetches details of specified groupID
+      description: Fetches group details with members and group image.
       operationId: getGroup
       security:
         - BearerAuth: []
@@ -632,7 +630,7 @@ paths:
             maxLength: 50
       responses:
         '200':
-          description: Group details retrieved successfully
+          description: Group details fetched successfully
           content:
             application/json:
               schema:
@@ -643,12 +641,12 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                groupPhoto: "aGVsbG8="
+                groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
     delete:
       tags:
         - group
       summary: Leaves a group
-      description: Removes the authenticated user from the specified group.
+      description: Removes the logged-in user from the specified groupID.
       operationId: leaveGroup
       security:
         - BearerAuth: []
@@ -669,7 +667,7 @@ paths:
       tags:
         - group
       summary: Adds a user to a group
-      description: Adds a user to the specified group.
+      description: Adds a user to the specified groupID.
       operationId: addToGroup
       security:
         - BearerAuth: []
@@ -698,8 +696,8 @@ paths:
     put:
       tags:
         - group
-      summary: Updates the group's name
-      description: Updates the group's name.
+      summary: Updates the groupName.
+      description: Updates the groupName.
       operationId: setGroupName
       security:
         - BearerAuth: []
@@ -719,10 +717,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateGroupRequest'
+              $ref: '#/components/schemas/UpdateGroupNameRequest'
       responses:
         '200':
-          description: Group name updated successfully.
+          description: GroupName updated successfully.
           content:
             application/json:
               schema:
@@ -733,13 +731,13 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                groupPhoto: "aGVsbG8="
+                groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
   /groups/{groupId}/photo:
     put:
       tags:
         - group
-      summary: Updates the group's photo
-      description: Updates the group's photo.
+      summary: Updates the groupPhoto
+      description: Updates the groupPhoto.
       operationId: setGroupPhoto
       security:
         - BearerAuth: []
@@ -754,20 +752,20 @@ paths:
             minLength: 1
             maxLength: 50
       requestBody:
-        description: New photo (JPEG or PNG) as a base64 encoded string.
+        description: New photo (JPEG or PNG) in base64.
         required: true
         content:
           image/png:
             schema:
               type: string
-              description: PNG image file (base64 encoded)
+              description: PNG image file (base64)
               pattern: '^[A-Za-z0-9+/]*={0,2}$'
               minLength: 1
               maxLength: 10485760
           image/jpeg:
             schema:
               type: string
-              description: JPEG image file (base64 encoded)
+              description: JPEG image file (base64)
               pattern: '^[A-Za-z0-9+/]*={0,2}$'
               minLength: 1
               maxLength: 10485760
@@ -778,13 +776,13 @@ paths:
             application/json:
               schema:
                 type: object
-                description: Confirmation message for group photo update.
+                description: Pop-up message for group photo update.
                 required:
                   - message
                 properties:
                   message:
                     type: string
-                    description: Confirmation message.
+                    description: Pop-up message.
                     example: "Group photo updated successfully"
                     pattern: '^.*$'
                     minLength: 1
@@ -799,22 +797,22 @@ components:
   schemas:
     LoginRequest:
       type: object
-      description: Request schema for user login.
+      description: Structure of the data sent when a user logs in.
       required:
         - name
         - photo
       properties:
         name:
           type: string
-          description: The name of the user to log in.
-          example: "Maria"
+          description: Username provided by the person signing in.
+          example: "Nazerke"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 3
-          maxLength: 16
+          maxLength: 24
         photo:
           type: string
-          description: Base64-encoded default photo.
-          example: "aGVsbG8="
+          description: A base64  profile picture for the user.
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
           pattern: '^[A-Za-z0-9+/]+={0,2}$'
           minLength: 1
           maxLength: 1000000
@@ -826,7 +824,7 @@ components:
         identifier:
           type: string
           description: The identifier of the logged-in user.
-          example: "abcdef012345"
+          example: "user123456abc"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 1
           maxLength: 50
@@ -841,7 +839,7 @@ components:
           example: "NewName"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 3
-          maxLength: 16
+          maxLength: 24
 
     User:
       type: object
@@ -861,14 +859,14 @@ components:
         name:
           type: string
           description: Name of the user.
-          example: "Maria"
+          example: "Nazerke"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 3
-          maxLength: 16
+          maxLength: 24
         photo:
           type: string
-          description: User photo in base64 encoding.
-          example: "aGVsbG8="
+          description: User photo in base64.
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
           pattern: '^[A-Za-z0-9+/]+={0,2}$'
           minLength: 1
           maxLength: 1000000
@@ -909,8 +907,8 @@ components:
             maxLength: 50
         conversationPhoto:
           type: string
-          description: Base64-encoded conversation photo (if any).
-          example: "aGVsbG8="
+          description: Base64 conversation photo (if any).
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 1000000
@@ -955,8 +953,8 @@ components:
             maxLength: 50
         conversationPhoto:
           type: string
-          description: Base64-encoded conversation photo (if any).
-          example: "aGVsbG8="
+          description: Conversation photo in base64 (if any).
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 1000000
@@ -978,15 +976,15 @@ components:
         - senderId
         - senderName
         - content
-        - timestamp
         - attachment
+        - timestamp
         - reactionCount
         - reactingUserIds
       properties:
         id:
           type: string
           description: Unique identifier of the message.
-          example: "msg123"
+          example: "message123"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 1
           maxLength: 50
@@ -1000,7 +998,7 @@ components:
         senderName:
           type: string
           description: Name of the sender.
-          example: "Alice"
+          example: "Aruzhan"
           pattern: '^[a-zA-Z0-9 ]+$'
           minLength: 1
           maxLength: 50
@@ -1011,27 +1009,27 @@ components:
           pattern: '^.*$'
           minLength: 1
           maxLength: 1000
-        timestamp:
+         attachment:
           type: string
-          format: date-time
-          description: When the message was sent.
-          example: "2023-10-20T10:05:00Z"
-          minLength: 20
-          maxLength: 29
-        attachment:
-          type: string
-          description: Base64-encoded attachment (if any).
+          description: Base64 attachment (if any).
           example: ""
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 10485760
-        reactionCount:
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was sent.
+          example: "2025-11-20T10:05:00Z"
+          minLength: 20
+          maxLength: 29
+        reactionNumber:
           type: integer
           description: Number of reactions on the message.
           example: 2
         reactingUserIds:
           type: array
-          description: List of user IDs who have reacted to the message.
+          description: List of user IDs who reacted to this message.
           minItems: 0
           maxItems: 1000
           items:
@@ -1042,35 +1040,35 @@ components:
             maxLength: 50
         replyTo:
           type: string
-          description: (Optional) ID of the message being replied to.
+          description: ID of the message being replied to. Optional.
           example: ""
           pattern: '^[a-zA-Z0-9_]*$'
           minLength: 0
           maxLength: 50
         replyContent:
           type: string
-          description: (Optional) A preview of the message being replied to.
+          description: A preview of the message being replied to. Optional
           example: ""
           pattern: '^.*$'
           minLength: 0
           maxLength: 1000
-        replySenderName:
+        repliedMessageSenderName:
           type: string
-          description: (Optional) Name of the sender of the replied-to message.
+          description: Name of the sender whose message is being replied. Optional
           example: ""
           pattern: '^[a-zA-Z0-9 ]*$'
           minLength: 0
           maxLength: 50
         replyAttachment:
           type: string
-          description: (Optional) Base64-encoded attachment from the replied-to message.
+          description: Base64 attachment from the replied-to message. Optional
           example: ""
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 10485760
         status:
           type: string
-          description: (Optional) Delivery/read status; provided only for messages not sent by the authenticated user.
+          description: Shows whether the message is delivered/read.Included only if the message was not sent by logged-in user. Optional
           example: "✓"
           pattern: '^.*$'
           minLength: 0
@@ -1078,34 +1076,34 @@ components:
 
     ForwardMessageRequest:
       type: object
-      description: Request schema for forwarding a message.
+      description: Request body schema for forwarding a message.
       required:
         - targetConversationId
       properties:
         targetConversationId:
           type: string
-          description: ID of the conversation to which the message will be forwarded.
+          description: ID of the conversation where the message will be forwarded.
           example: "conv456"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 1
           maxLength: 50
         forwarderName:
           type: string
-          description: (Optional) Name of the user forwarding the message.
-          example: "Maria"
+          description: Name of the user forwarding the message. Optional
+          example: "Nazerke"
           pattern: '^[a-zA-Z0-9 ]*$'
           minLength: 0
           maxLength: 50
 
     AddCommentRequest:
       type: object
-      description: Request schema for adding a comment.
+      description: Request body schema to add a comment.
       required:
         - content
       properties:
         content:
           type: string
-          description: The content of the comment.
+          description: The text of the comment.
           example: "Nice post!"
           pattern: '^.*$'
           minLength: 1
@@ -1113,21 +1111,21 @@ components:
 
     AddGroupMemberRequest:
       type: object
-      description: Request schema for adding a group member.
+      description: Request body schema to add a group member.
       required:
         - userId
       properties:
         userId:
           type: string
-          description: ID of the user to add.
+          description: ID of the user that is added.
           example: "user789"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 1
           maxLength: 50
 
-    UpdateGroupRequest:
+    UpdateGroupNameRequest:
       type: object
-      description: Request schema for updating group information.
+      description: Request body schema to update the name of the group.
       required:
         - groupName
       properties:
@@ -1137,7 +1135,7 @@ components:
           example: "New Group Name"
           pattern: '^[a-zA-Z0-9_ ]+$'
           minLength: 3
-          maxLength: 16
+          maxLength: 24
 
     Group:
       type: object
@@ -1175,10 +1173,11 @@ components:
             maxLength: 50
         groupPhoto:
           type: string
-          description: Base64-encoded group photo (if any).
-          example: "aGVsbG8="
+          description: group photo in base64 (if any).
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 1000000
+
 
 
