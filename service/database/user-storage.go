@@ -8,13 +8,13 @@ import (
 func (db *appdbimpl) CreateUser(u User) (User, error) {
 	_, err := db.c.Exec("INSERT INTO users(id, name, photo) VALUES (?, ?, ?)", u.Id, u.Name, u.Photo)
 	if err != nil {
-		var existing User
-		if errCheck := db.c.QueryRow("SELECT id, name FROM users WHERE name = ?", u.Name).Scan(&existing.Id, &existing.Name); errCheck != nil {
+		var existable User
+		if errCheck := db.c.QueryRow("SELECT id, name FROM users WHERE name = ?", u.Name).Scan(&existable.Id, &existable.Name); errCheck != nil {
 			if errCheck == sql.ErrNoRows {
 				return u, err
 			}
 		}
-		return existing, nil
+		return existable, nil
 	}
 	return u, nil
 }
@@ -32,21 +32,22 @@ func (db *appdbimpl) GetUserByName(name string) (User, error) {
 
 func (db *appdbimpl) GetUserById(id string) (User, error) {
 	var u User
-	if err := db.c.QueryRow("SELECT id, name FROM users WHERE id = ?", id).Scan(&u.Id, &u.Name); err != nil {
-		if err == sql.ErrNoRows {
-			return u, ErrUserDoesNotExist
-		}
-		return u, err
+	err := db.c.QueryRow("SELECT id, name FROM users WHERE id = ?", id).Scan(&u.Id, &u.Name)
+	if err == sql.ErrNoRows {
+		return User{}, ErrUserDoesNotExist
+	}
+	if err != nil {
+		return User{}, err
 	}
 	return u, nil
 }
 
 func (db *appdbimpl) UpdateUserName(userId, newName string) (User, error) {
-	res, err := db.c.Exec(`UPDATE users SET name=? WHERE id=?`, newName, userId)
+	result, err := db.c.Exec(`UPDATE users SET name=? WHERE id=?`, newName, userId)
 	if err != nil {
 		return User{}, err
 	}
-	affected, err := res.RowsAffected()
+	affected, err := result.RowsAffected()
 	if err != nil {
 		return User{}, err
 	} else if affected == 0 {
@@ -56,12 +57,12 @@ func (db *appdbimpl) UpdateUserName(userId, newName string) (User, error) {
 }
 
 func (db *appdbimpl) UpdateUserPhoto(userID string, photo []byte) error {
-	var exists bool
-	err := db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE id=?)`, userID).Scan(&exists)
+	var existable bool
+	err := db.c.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE id=?)`, userID).Scan(&existable)
 	if err != nil {
 		return err
 	}
-	if !exists {
+	if !existable {
 		return ErrUserDoesNotExist
 	}
 	_, err = db.c.Exec(`UPDATE users SET photo=? WHERE id=?`, photo, userID)
