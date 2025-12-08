@@ -14,6 +14,18 @@ import (
 
 var ErrUnauthorized = errors.New("unauthorized request")
 
+func (rt *_router) getAuthenticatedUserID(r *http.Request) (string, error) {
+	authHeader := r.Header.Get("Authorization")
+	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
+		return "", ErrUnauthorized
+	}
+	userID := authHeader[7:]
+	if userID == "" {
+		return "", ErrUnauthorized
+	}
+	return userID, nil
+}
+
 func (rt *_router) setMyUserName(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -34,7 +46,7 @@ func (rt *_router) setMyUserName(
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if len(req.Name) < 3 || len(req.Name) > 16 {
+	if len(req.Name) < 3 || len(req.Name) > 24 {
 		http.Error(w, "Invalid username length", http.StatusBadRequest)
 		return
 	}
@@ -113,17 +125,7 @@ func (rt *_router) setMyPhoto(
 	}
 }
 
-func (rt *_router) getAuthenticatedUserID(r *http.Request) (string, error) {
-	authHeader := r.Header.Get("Authorization")
-	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
-		return "", ErrUnauthorized
-	}
-	userID := authHeader[7:]
-	if userID == "" {
-		return "", ErrUnauthorized
-	}
-	return userID, nil
-}
+
 
 func (rt *_router) searchUsers(
 	w http.ResponseWriter,
