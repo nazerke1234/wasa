@@ -19,9 +19,9 @@ func (rt *_router) liveness(w http.ResponseWriter, r *http.Request, ps httproute
 }
 
 func generateNewID() (string, error) {
-	uid, err := uuid.NewV4()
+	uniqueID, err := uuid.NewV4()
 	if err != nil {
 		return "", err
 	}
-	return uid.String(), nil
+	return uniqueID.String(), nil
 }
