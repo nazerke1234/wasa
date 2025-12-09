@@ -5,7 +5,7 @@
         <img v-if="groupImage" :src="groupImage" alt="Group Image" class="group-image" />
       </div>
       <div class="group-details">
-        <h1 class="group-title">{{ groupTitle }}</h1>
+        <h1 class="groupName">{{ groupName }}</h1>
         <div class="name-update-section">
           <input
             v-model="updatedGroupTitle"
@@ -370,5 +370,6 @@ button:hover:not(:disabled) {
   background-color: #0056b3;
 }
 </style>
+
 
 
