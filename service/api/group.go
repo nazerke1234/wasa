@@ -144,7 +144,7 @@ func (rt *_router) setGroupName(
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if len(req.Name) < 3 || len(req.Name) > 16 {
+	if len(req.Name) < 3 || len(req.Name) > 24 {
 		http.Error(w, "Invalid group name length", http.StatusBadRequest)
 		return
 	}
