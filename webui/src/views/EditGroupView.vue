@@ -10,14 +10,14 @@
           <input
             v-model="updatedGroupTitle"
             placeholder="Enter new group title"
-            maxlength="16"
+            maxlength="24"
             minlength="3"
           />
           <button
             @click="modifyGroupTitle"
-            :disabled="!updatedGroupTitle || updatedGroupTitle === groupTitle"
+            :disabled="!updatedGroupTitle || updatedGroupTitle === groupName"
           >
-            Change Group Title
+            Change Group Name
           </button>
         </div>
         <div class="image-update-section">
@@ -75,9 +75,9 @@ export default {
   },
   data() {
     return {
-      authToken: localStorage.getItem("token"),
-      groupIdentifier: this.$route.params.uuid,
-      groupTitle: localStorage.getItem("groupName"),
+      token: localStorage.getItem("token"),
+      groupId: this.$route.params.uuid,
+      groupName: localStorage.getItem("groupName"),
       groupImage: null,
       updatedGroupTitle: "", 
       newGroupImage: null, 
@@ -93,18 +93,18 @@ export default {
   methods: {
     async loadGroupDetails() {
       try {
-        const userToken = localStorage.getItem("token");
-        if (!userToken) {
+        const token = localStorage.getItem("token");
+        if (!token) {
           this.$router.push({ path: "/" });
           return;
         }
-        const response = await axios.get(`/groups/${this.groupIdentifier}`, {
+        const response = await axios.get(`/groups/${this.groupId}`, {
           headers: {
-            Authorization: `Bearer ${userToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
-        const groupImageData = response.data.groupPhoto;
-        this.groupImage = groupImageData ? `data:image/*;base64,${groupImageData}` : null;
+        const groupImage = response.data.groupPhoto;
+        this.groupImage = groupImage ? `data:image/*;base64,${groupImage}` : null;
         this.groupMembers = response.data.members;
       } catch (error) {
         console.error("Unable to load group details:", error);
@@ -122,9 +122,9 @@ export default {
       try {
         const imageData = new FormData();
         imageData.append("photo", this.newGroupImage);
-        await axios.put(`/groups/${this.groupIdentifier}/photo`, imageData, {
+        await axios.put(`/groups/${this.groupId}/photo`, imageData, {
           headers: {
-            Authorization: `Bearer ${this.authToken}`,
+            Authorization: `Bearer ${this.token}`,
           },
         });
         alert("Group image successfully updated!");
@@ -136,20 +136,20 @@ export default {
       }
     },
     async modifyGroupTitle() {
-      if (!this.updatedGroupTitle || this.updatedGroupTitle === this.groupTitle) return;
+      if (!this.updatedGroupTitle || this.updatedGroupTitle === this.groupName) return;
       try {
         await axios.put(
-          `/groups/${this.groupIdentifier}/name`,
+          `/groups/${this.groupId}/name`,
           { groupName: this.updatedGroupTitle },
           {
             headers: {
-              Authorization: `Bearer ${this.authToken}`,
+              Authorization: `Bearer ${this.token}`,
             },
           }
         );
-        alert("Group title successfully updated!");
+        alert("Group name successfully updated!");
         localStorage.setItem("groupName", this.updatedGroupTitle);
-        this.groupTitle = this.updatedGroupTitle;
+        this.groupName = this.updatedGroupTitle;
         this.updatedGroupTitle = "";
       } catch (error) {
         console.error("Unable to update group title:", error);
@@ -161,9 +161,9 @@ export default {
         return;
       }
       try {
-        await axios.delete(`/groups/${this.groupIdentifier}`, {
+        await axios.delete(`/groups/${this.groupId}`, {
           headers: {
-            Authorization: `Bearer ${this.authToken}`,
+            Authorization: `Bearer ${this.token}`,
           },
         });
         this.$router.push({ path: "/groups" });
@@ -203,13 +203,13 @@ export default {
     async includeUserInGroup(userId) {
       if (this.isCurrentMember(userId)) return;
       try {
-        await axios.post(`/groups/${this.groupIdentifier}`, 
+        await axios.post(`/groups/${this.groupId}`, 
         {  
           userId: userId,
         },
         {
             headers: {
-            Authorization: `Bearer ${this.authToken}`,
+            Authorization: `Bearer ${this.token}`,
             },}
           );
         this.groupMembers.push(userId);
@@ -370,4 +370,5 @@ button:hover:not(:disabled) {
   background-color: #0056b3;
 }
 </style>
+
 
