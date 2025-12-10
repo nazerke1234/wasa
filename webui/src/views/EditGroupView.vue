@@ -60,18 +60,18 @@
         </div>
       </div>
     </div>
-    <ErrorDisplay v-if="errorMessage" :msg="errorMessage" />
+    <ErrorMsg v-if="errorMessage" :msg="errorMessage" />
   </div>
 </template>
 
 <script>
 import axios from "../services/axios";
-import ErrorDisplay from "../components/ErrorMsg.vue";
+import ErrorMsg from "../components/ErrorMsg.vue";
 
 export default {
   name: "EditGroupView",
   components: {
-    ErrorDisplay,
+    ErrorMsg,
   },
   data() {
     return {
@@ -332,7 +332,7 @@ export default {
   flex: 1;
 }
 
-.group-title {
+.groupName {
   margin: 0;
   font-size: 24px;
   font-weight: bold;
@@ -370,6 +370,7 @@ button:hover:not(:disabled) {
   background-color: #0056b3;
 }
 </style>
+
 
 
 
