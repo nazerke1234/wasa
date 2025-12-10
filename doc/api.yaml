@@ -66,7 +66,7 @@ paths:
         - BearerAuth: []
       responses:
         '200':
-          description: User photo fetched successfully.
+          description: User photo fetched successfully
           content:
             application/json:
               schema:
@@ -74,7 +74,7 @@ paths:
               example:
                 id: "user123"
                 name: "Nazerke"
-                photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                photo: "aGVsbG8="
     put:
       tags:
         - user
@@ -111,7 +111,7 @@ paths:
               example:
                 id: "user123"
                 name: "Nazerke"
-                photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                photo: "aGVsbG8="
 
   /users/name:
     put:
@@ -139,7 +139,7 @@ paths:
               example:
                 id: "user123"
                 name: "NewName"
-                photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                photo: "aGVsbG8="
 
   /conversations:
     get:
@@ -175,7 +175,7 @@ paths:
                     members:
                       - "user123"
                       - "user456"
-                    conversationPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                    conversationPhoto: "aGVsbG8="
                     lastMessage:
                       id: "message123"
                       senderId: "user456"
@@ -232,7 +232,7 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                conversationPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                conversationPhoto: "aGVsbG8="
                 lastMessage:
                   id: "message789"
                   senderId: "user456"
@@ -276,7 +276,7 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                conversationPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                conversationPhoto: "aGVsbG8="
                 lastMessage:
                   id: "message789"
                   senderId: "user456"
@@ -351,7 +351,7 @@ paths:
     post:
       tags:
         - message
-      summary: Sends an existing message to a different conversation.
+      summary: Sends an existing message to a different conversation
       description: Forwards a specific message from one conversation to another.
       operationId: forwardMessage
       security:
@@ -518,7 +518,7 @@ paths:
               example:
                 - id: "user123"
                   name: "Nazerke"
-                  photo: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                  photo: "aGVsbG8="
 
   /groups:
     get:
@@ -554,13 +554,15 @@ paths:
                     members:
                       - "user123"
                       - "user456"
-                    groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                    groupPhoto: "aGVsbG8="
     post:
       tags:
         - group
       summary: Creates a new group
       description: |-
-        Creates a new group chat. The request should use multipart/form-data including the group name, a JSON string of member IDs (under membersJson), and a group image.
+        Creates a new group chat. 
+        The request should use multipart/form-data including the group name, a JSON string of member IDs (under "membersJson"),
+        and a group image.
       operationId: createGroup
       security:
         - BearerAuth: []
@@ -590,7 +592,7 @@ paths:
                 image:
                   type: string
                   description: Group image (JPEG or PNG) in basr 64.
-                  example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                  example: "aGVsbG8="
                   pattern: '^[A-Za-z0-9+/]*={0,2}$'
                   minLength: 1
                   maxLength: 10485760
@@ -607,7 +609,7 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                groupPhoto: "aGVsbG8="
 
   /groups/{groupId}:
     get:
@@ -641,7 +643,7 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                groupPhoto: "aGVsbG8="
     delete:
       tags:
         - group
@@ -696,7 +698,7 @@ paths:
     put:
       tags:
         - group
-      summary: Updates the groupName.
+      summary: Updates the groupName
       description: Updates the groupName.
       operationId: setGroupName
       security:
@@ -731,7 +733,7 @@ paths:
                 members:
                   - "user123"
                   - "user456"
-                groupPhoto: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+                groupPhoto: "aGVsbG8="
   /groups/{groupId}/photo:
     put:
       tags:
@@ -808,7 +810,7 @@ components:
           example: "Nazerke"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 3
-          maxLength: 24
+          maxLength: 16
         photo:
           type: string
           description: A base64  profile picture for the user.
@@ -839,7 +841,7 @@ components:
           example: "NewName"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 3
-          maxLength: 24
+          maxLength: 16
 
     User:
       type: object
@@ -862,11 +864,11 @@ components:
           example: "Nazerke"
           pattern: '^[a-zA-Z0-9_]+$'
           minLength: 3
-          maxLength: 24
+          maxLength: 16
         photo:
           type: string
           description: User photo in base64.
-          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+          example: "aGVsbG8="
           pattern: '^[A-Za-z0-9+/]+={0,2}$'
           minLength: 1
           maxLength: 1000000
@@ -908,7 +910,7 @@ components:
         conversationPhoto:
           type: string
           description: Base64 conversation photo (if any).
-          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+          example: "aGVsbG8="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 1000000
@@ -954,7 +956,7 @@ components:
         conversationPhoto:
           type: string
           description: Conversation photo in base64 (if any).
-          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+          example: "aGVsbG8="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 1000000
@@ -1009,7 +1011,7 @@ components:
           pattern: '^.*$'
           minLength: 1
           maxLength: 1000
-         attachment:
+        attachment:
           type: string
           description: Base64 attachment (if any).
           example: ""
@@ -1040,35 +1042,35 @@ components:
             maxLength: 50
         replyTo:
           type: string
-          description: ID of the message being replied to. Optional.
+          description: ID of the message being replied to (Optional).
           example: ""
           pattern: '^[a-zA-Z0-9_]*$'
           minLength: 0
           maxLength: 50
         replyContent:
           type: string
-          description: A preview of the message being replied to. Optional
+          description: A preview of the message being replied to (Optional).
           example: ""
           pattern: '^.*$'
           minLength: 0
           maxLength: 1000
         repliedMessageSenderName:
           type: string
-          description: Name of the sender whose message is being replied. Optional
+          description: Name of the sender whose message is being replied (Optional).
           example: ""
           pattern: '^[a-zA-Z0-9 ]*$'
           minLength: 0
           maxLength: 50
         replyAttachment:
           type: string
-          description: Base64 attachment from the replied-to message. Optional
+          description: Base64 attachment from the replied-to message (Optional).
           example: ""
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 10485760
         status:
           type: string
-          description: Shows whether the message is delivered/read.Included only if the message was not sent by logged-in user. Optional
+          description: Shows whether the message is delivered/read.Included only if the message was not sent by logged-in user (Optional).
           example: "✓"
           pattern: '^.*$'
           minLength: 0
@@ -1089,7 +1091,7 @@ components:
           maxLength: 50
         forwarderName:
           type: string
-          description: Name of the user forwarding the message. Optional
+          description: Name of the user forwarding the message (Optional).
           example: "Nazerke"
           pattern: '^[a-zA-Z0-9 ]*$'
           minLength: 0
@@ -1135,7 +1137,7 @@ components:
           example: "New Group Name"
           pattern: '^[a-zA-Z0-9_ ]+$'
           minLength: 3
-          maxLength: 24
+          maxLength: 16
 
     Group:
       type: object
@@ -1174,10 +1176,7 @@ components:
         groupPhoto:
           type: string
           description: group photo in base64 (if any).
-          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAukB9oR5hW8AAAAASUVORK5CYII="
+          example: "aGVsbG8="
           pattern: '^[A-Za-z0-9+/]*={0,2}$'
           minLength: 0
           maxLength: 1000000
-
-
-
