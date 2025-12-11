@@ -10,7 +10,7 @@
           <input
             v-model="updatedGroupTitle"
             placeholder="Enter new group title"
-            maxlength="24"
+            maxlength="16"
             minlength="3"
           />
           <button
@@ -370,6 +370,7 @@ button:hover:not(:disabled) {
   background-color: #0056b3;
 }
 </style>
+
 
 
 
