@@ -39,7 +39,7 @@ type Message struct {
 	Status            string   `json:"status"`
 	ReplyTo           string   `json:"replyTo,omitempty"`
 	ReplyContent      string   `json:"replyContent,omitempty"`
-	RepliedMessageSenderName   string   `json:"repliedMessageSenderName,omitempty"`
+	ReplySenderName   string   `json:"replySenderName,omitempty"`
 	ReplyAttachment   []byte   `json:"replyAttachment,omitempty"`
 }
 
