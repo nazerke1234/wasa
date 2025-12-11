@@ -46,7 +46,7 @@ func (rt *_router) setMyUserName(
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if len(req.Name) < 3 || len(req.Name) > 24 {
+	if len(req.Name) < 3 || len(req.Name) > 16 {
 		http.Error(w, "Invalid username length", http.StatusBadRequest)
 		return
 	}
