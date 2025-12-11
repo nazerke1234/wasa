@@ -11,7 +11,7 @@ info:
   version: "1.0.2"
 
 tags:
-  - name: loging
+  - name: login
     description: Handles user sign-in and authentication requests
   - name: message
     description: Responsible for sending, retrieving, and managing chat messages
