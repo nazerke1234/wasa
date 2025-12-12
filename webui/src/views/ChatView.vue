@@ -372,145 +372,238 @@ export default {
 </script>
 
 <style scoped>
+/* ------------------------------------
+   COLOR SYSTEM (EASY TO TUNE LATER)
+------------------------------------- */
+:root {
+  --brand-color: #4a90e2;
+  --brand-light: #e6f1fc;
+  --self-bubble: #dff5e1;
+  --other-bubble: #f2f4f7;
+  --border-light: #d9d9d9;
+  --text-dark: #222;
+  --text-light: #555;
+}
+
+/* ------------------------------------
+   CHAT LAYOUT
+------------------------------------- */
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 92vh;
+  background: #ffffff;
   overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
 }
+
+/* ------------------------------------
+   HEADER
+------------------------------------- */
+/* CHAT HEADER — modern and readable */
 .chat-header {
   display: flex;
   align-items: center;
   padding: 15px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background-color: white; 
+  border-bottom: 1px solid #3a7bc1;
+  color:  #232323ff; 
 }
+
+/* conversation title */
+.chat-header h3 {
+  font-size: 30px;
+  margin: 0;
+  color: #232323ff;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+
 .chat-photo {
-  width: 40px;
-  height: 40px;
-  margin-right: 10px;
+  width: 42px;
+  height: 42px;
+  margin-right: 12px;
 }
+
 .chat-photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
   border-radius: 50%;
+  object-fit: cover;
 }
+
+/* ------------------------------------
+   MESSAGES AREA
+------------------------------------- */
 .chat-messages {
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 22px;
+  background: #fafafa;
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 }
+
+/* ------------------------------------
+   MESSAGE BUBBLES
+------------------------------------- */
 .message {
   position: relative;
-  max-width: 70%;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  padding: 10px;
-  background-color: #e0f2f1;
+  max-width: 68%;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background-color: #f3fffeff;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
+
+/* User message */
 .message.self {
   margin-left: auto;
-  background-color: #d1e7dd;
+  background-color: #bcf9deff;
 }
+
+/* Group thumbnails */
 .sender-thumbnail {
   position: absolute;
   left: 10px;
   top: 10px;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
 }
+
 .sender-thumbnail img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
   border-radius: 50%;
+  object-fit: cover;
 }
+
+/* ------------------------------------
+   TEXT & TIMESTAMP
+------------------------------------- */
+.message p {
+  margin: 0;
+  color: #2f2f2fff;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message small {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #777;
+}
+
 .message-content {
   position: relative;
   min-height: 40px;
 }
-.message p {
-  margin: 0;
-  color: #333;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-.message small {
-  margin-top: 5px;
-  color: #666;
-  font-size: 0.8em;
-}
+/* ------------------------------------
+   ATTACHMENTS
+------------------------------------- */
 .attachment-container {
   margin-top: 8px;
-  width: 300px;
-  height: 300px;
+  width: 260px;
+  max-height: 260px;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid #d9dde0ff;
 }
+
 .attachment-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
+/* ------------------------------------
+   ACTION BUTTONS (Reply / Heart / Delete)
+------------------------------------- */
 .action-buttons {
   position: absolute;
-  top: 0;
-  right: -50px;
+  top: 50%;
+  transform: translateY(-50%);
+  right: -40px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.25s;
 }
+
 .message.self .action-buttons {
-  left: -50px;
   right: auto;
+  left: -40px;
 }
-.action-button {
-  position: static;
-  width: 17px;
-  height: 17px;
-  border: 1px solid #aaa;
-  border-radius: 50%;
-  background-color: white;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  opacity: 0.9;
-  transition: opacity 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  padding: 0;
-}
-.action-button:hover {
+
+.message:hover .action-buttons {
   opacity: 1;
+}
+
+/* ACTION BUTTONS - Always visible, modern style */
+.action-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #f1f3f5; /* light gray */
+  border: 1px solid #c5cbd3;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #6c7a89; /* icon color */
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background-color: var(--brand-light);
+  border-color: var(--brand-color);
+  color: var(--brand-color);
 }
 .reply-button {
   font-size: 10px;
   margin-right: 5px;
 }
+
+/* If it’s the liked heart */
+.has-reacted {
+  background-color: #ffe3e3 !important;
+  border-color: #ff8b8b !important;
+  color: #ff4d4d !important;
+}
+
+
+/* ------------------------------------
+   FORWARD MENU
+------------------------------------- */
 .forward-options {
   position: absolute;
-  top: 30px;
   right: 0;
-  background-color: #ffffff;
-  border-radius: 5px;
-  padding: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  top: 32px;
+  width: 260px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  padding: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.09);
   z-index: 100;
-  width: 250px;
 }
-.forward-select {
+
+.forward-select,
+.contact-search input {
   width: 100%;
   padding: 8px;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
   font-size: 14px;
+  margin-bottom: 8px;
 }
 .forward-buttons-container {
   display: flex;
@@ -518,41 +611,38 @@ export default {
   justify-content: center;
   margin-top: 10px;
 }
-.button-style {
-  background-color: #128c7e;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-.button-style:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-.contact-search input {
-  width: 100%;
-  padding: 6px;
-  margin-bottom: 4px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
+
+/* Results */
 .contact-results {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 6px 0;
-  max-height: 100px;
+  max-height: 120px;
   overflow-y: auto;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
 }
+
 .contact-result {
-  padding: 4px;
+  padding: 8px;
   cursor: pointer;
+  transition: background 0.2s;
   border-bottom: 1px solid #eee;
 }
+
 .contact-result:hover {
   background-color: #f0f0f0;
+}
+
+.button-style {
+  flex: 1;
+  padding: 10px;
+  background: #4a95ebff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.button-style:hover {
+  background: #3a74b6;
 }
 .file-icon {
   font-size: 18px;
@@ -563,7 +653,7 @@ export default {
   bottom: 5px;
   right: 10px;
   font-size: 12px;
-  color: #555;
+  color: #646464ff;
 }
 .reactors-list ul {
   margin: 0;
@@ -575,10 +665,14 @@ export default {
 .reactors-list li {
   margin: 2px 0;
 }
+
+/* ------------------------------------
+   REPLY PREVIEW
+------------------------------------- */
 .reply-preview-box {
-  background-color: #f0f0f0;
-  border-left: 4px solid #128c7e;
-  padding: 8px;
+  background-color: #d9dde0ff;
+  border-left: 4px solid #4a95ebff;
+  padding: 10px 14px;
   margin: 10px;
   display: flex;
   justify-content: space-between;
@@ -601,55 +695,55 @@ export default {
   border: none;
   font-size: 18px;
   cursor: pointer;
-  color: #888;
+  color: #2f2f2fff;
 }
+
+/* ------------------------------------
+   INPUT AREA
+------------------------------------- */
 .chat-input {
   display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  padding: 10px;
-  gap: 8px;
+  align-items: center;
+  padding: 14px;
+  border-top: 1px solid #d9dde0ff;
+  gap: 10px;
 }
+
 .attach-button {
-  background-color: #25d366;
+  background: #4a95ebff;
   color: white;
   border: none;
+  padding: 10px 14px;
   border-radius: 20px;
   cursor: pointer;
-  margin-right: 10px;
-  font-size: 14px;
-  padding: 10px 15px;
+  font-size: 13px;
 }
+
 .attach-button:hover {
-  background-color: #20b358;
+  background: #3a74b6;
 }
+
 .message-input {
   flex: 1;
-  min-width: 200px;
-  padding: 12px;
-  border: 1px solid #dee2e6;
+  padding: 11px 14px;
+  border: 1px solid #d9dde0ff;
   border-radius: 20px;
   font-size: 14px;
   outline: none;
 }
+
 .send-button {
-  background-color: #128c7e;
+  background: #4a95ebff;
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 11px 24px;
   border-radius: 20px;
-  margin-left: 10px;
   cursor: pointer;
-  font-size: 14px;
+  transition: background 0.2s;
 }
+
 .send-button:hover {
-  background-color: #0f7c6a;
-}
-@media (max-width: 600px) {
-  .conversation-block p {
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-  }
+  background: #3a74b6;
 }
 </style>
 

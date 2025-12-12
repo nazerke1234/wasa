@@ -9,7 +9,7 @@ export default {}
 
 	<header class="navbar custom-navbar sticky-top">
      <a class="navbar-brand custom-brand" href="">WASAText</a>
-     <button class="navbar-toggler custom-toggler" type="button">
+     <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
        <span class="navbar-toggler-icon"></span>
      </button>
     </header>
@@ -24,20 +24,17 @@ export default {}
 					<ul class="nav flex-column">
 						<li class="nav-item">
 							<RouterLink to="/home" class="nav-link">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#home"/></svg>
-								My Conversations
+							 My Conversations
 							</RouterLink>
 						</li>
 						<li class="nav-item">
 							<RouterLink to="/me" class="nav-link">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#layout"/></svg>
-								My Profile
+							 My Profile
 							</RouterLink>
 						</li>
 						<li class="nav-item">
 							<RouterLink to="/search" class="nav-link">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
-								Search People
+							 Search People
 							</RouterLink>
 						</li>
 					</ul>
@@ -48,8 +45,7 @@ export default {}
 					<ul class="nav flex-column">
 						<li class="nav-item">
 							<RouterLink :to="'/groups'" class="nav-link">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#file-text"/></svg>
-								My Groups
+							 My Groups
 							</RouterLink>
 						</li>
 					</ul>
@@ -84,19 +80,55 @@ export default {}
   letter-spacing: 2px;   /* spacing between letters */
 }
 
-/* Navbar toggle button */
-.custom-toggler {
-  background-color: #fff;
-  border: none;
-  width: 50px;
-  height: 40px;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Sidebar background */
+.bg-custom-sidebar {
+  background-color: #343a40; /* dark gray */
+  color: #fff;
 }
 
-.custom-toggler:hover {
-  background-color: #e0e0e0;
+/* Sidebar links */
+.sidebar-link {
+  color: #fff;
+  font-weight: 500;
+  font-size: 16px;
+  text-decoration: none;
 }
+
+.sidebar-link:hover {
+  color: #2f36faff; /* gold hover */
+}
+
+/* Sidebar link default style */
+.sidebar .nav-link {
+  color: #fff; /* default text color */
+  transition: color 0.3s; /* smooth color change */
+}
+
+/* Sidebar link on hover */
+.sidebar .nav-link:hover {
+  color: #2f36faff; /* change to any color you like on hover */
+  text-decoration: none; /* remove underline if any */
+}
+
+/* Sidebar headings */
+.sidebar-heading {
+  color: #ccc;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Remove bullet points */
+.nav.flex-column {
+  list-style: none;
+  padding-left: 0;
+}
+
+/* Adjust main content */
+main {
+  background-color: #f8f9fa; /* optional */
+  min-height: 100vh;
+  padding-top: 1rem;
+}
+
+
 </style>
