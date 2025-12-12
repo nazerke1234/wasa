@@ -7,12 +7,12 @@ export default {}
 
 <template>
 
-	<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-		<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="">WASAText</a>
-		<button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"></span>
-		</button>
-	</header>
+	<header class="navbar custom-navbar sticky-top">
+     <a class="navbar-brand custom-brand" href="">WASAText</a>
+     <button class="navbar-toggler custom-toggler" type="button">
+       <span class="navbar-toggler-icon"></span>
+     </button>
+    </header>
 
 	<div class="container-fluid">
 		<div class="row">
@@ -64,4 +64,39 @@ export default {}
 </template>
 
 <style>
+/* Custom Navbar */
+.custom-navbar {
+  background-color: #4a90e2; /* blue background */
+  height: 70px;
+  padding: 0 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Navbar brand (WASAText) */
+.custom-brand {
+  font-size: 28px;       /* bigger font */
+  font-weight: bold;     /* bold */
+  color: #fff !important; /* white text */
+  font-family: 'Segoe UI', sans-serif; /* custom font */
+  letter-spacing: 2px;   /* spacing between letters */
+}
+
+/* Navbar toggle button */
+.custom-toggler {
+  background-color: #fff;
+  border: none;
+  width: 50px;
+  height: 40px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-toggler:hover {
+  background-color: #e0e0e0;
+}
 </style>
