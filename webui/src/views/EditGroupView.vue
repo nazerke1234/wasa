@@ -1,97 +1,136 @@
 <template>
   <div class="group-settings-panel">
+    
+    <LoadingSpinner v-if="isLoading" />
+    
     <div class="settings-header">
+      
       <div class="group-image-wrapper">
         <img v-if="groupImage" :src="groupImage" alt="Group Image" class="group-image" />
+        <div v-else class="group-image no-image-placeholder">
+           No Photo
+        </div>
       </div>
+
       <div class="group-details">
-        <h1 class="groupName">{{ groupName }}</h1>
-        <div class="name-update-section">
+        <h1 class="group-title">{{ groupName }}</h1>
+        
+        <div class="update-section name-update-section">
           <input
             v-model="updatedGroupTitle"
-            placeholder="Enter new group title"
+            placeholder="Enter new group title (3-16 chars)"
             maxlength="16"
             minlength="3"
+            class="input-field"
           />
           <button
+            class="btn-primary"
             @click="modifyGroupTitle"
             :disabled="!updatedGroupTitle || updatedGroupTitle === groupName"
           >
-            Change Group Name
+            Change Name
           </button>
         </div>
-        <div class="image-update-section">
-          <input type="file" @change="processImageSelection" accept="image/*" />
-          <button @click="modifyGroupImage" :disabled="!newGroupImage">Change Group Image</button>
-        </div>
-        <div class="member-addition-section">
-          <h3>Include New Members</h3>
-          <form @submit.prevent="findUsers" class="user-search-form">
-            <input
-              v-model="searchQuery"
-              placeholder="Find users by username"
-              class="search-field"
-            />
-            <button type="submit" class="search-submit-btn">Find</button>
-          </form>
-          
-          <div v-if="displaySearchResults" class="search-result-area">
-            <div v-if="searchResults.length === 0" class="empty-results">
-              No users found for "{{ previousSearchQuery }}"
-            </div>
-            <div v-else class="result-list">
-              <div v-for="user in searchResults" :key="user.id" class="result-item">
-                <span class="result-username">{{ user.name }}</span>
-                <button
-                  class="include-btn"
-                  @click="includeUserInGroup(user.id)"
-                  :disabled="isCurrentMember(user.id)"
-                >
-                  {{ isCurrentMember(user.id) ? 'Already in group' : 'Include in Group' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="group-exit-section">
-          <button class="exit-btn" @click="exitGroup">
-            Exit Group
+        
+        <div class="update-section image-update-section">
+          <input type="file" @change="processImageSelection" accept="image/jpeg, image/png" class="file-input" />
+          <button class="btn-primary" @click="modifyGroupImage" :disabled="!newGroupImage">
+            Change Image
           </button>
         </div>
       </div>
     </div>
+    
     <ErrorMsg v-if="errorMessage" :msg="errorMessage" />
+    <SuccessMsg v-if="successMessage" :msg="successMessage" />
+
+    <div class="member-addition-section">
+      <h3 class="section-title">Include New Members</h3>
+      
+      <form @submit.prevent="findUsers" class="user-search-form">
+        <input
+          v-model="searchQuery"
+          placeholder="Find users by username"
+          class="search-field input-field"
+        />
+        <button type="submit" class="btn-secondary search-submit-btn" :disabled="isLoading">
+          <LoadingSpinner v-if="isLoading" small />
+          <span v-else>Find</span>
+        </button>
+      </form>
+      
+      <div v-if="displaySearchResults" class="search-result-area">
+        <div v-if="searchResults.length === 0" class="empty-results">
+          No users found for "{{ previousSearchQuery }}"
+        </div>
+        <div v-else class="result-list">
+          <div v-for="user in searchResults" :key="user.id" class="result-item">
+            <span class="result-username">{{ user.name }}</span>
+            <button
+              class="btn-tertiary include-btn"
+              @click="includeUserInGroup(user.id)"
+              :disabled="isCurrentMember(user.id)"
+            >
+              {{ isCurrentMember(user.id) ? 'Already in group' : 'Include in Group' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="group-exit-section">
+      <button class="btn-danger" @click="exitGroup">
+        Exit Group
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from "../services/axios";
-import ErrorMsg from "../components/ErrorMsg.vue";
 
 export default {
   name: "EditGroupView",
-  components: {
-    ErrorMsg,
-  },
+
   data() {
     return {
       token: localStorage.getItem("token"),
       groupId: this.$route.params.uuid,
       groupName: localStorage.getItem("groupName"),
       groupImage: null,
-      updatedGroupTitle: "", 
-      newGroupImage: null, 
-      errorMessage: null, 
+      updatedGroupTitle: "",
+      newGroupImage: null,
+      errorMessage: null,
+      successMessage: null, 
+      isLoading: false, 
       searchQuery: "",
       previousSearchQuery: "",
       searchResults: [],
-      isLoading: false,
       displaySearchResults: false,
       groupMembers: [],
     };
   },
   methods: {
+    setMessages(type, message) {
+        if (type === 'success') {
+            this.successMessage = message;
+            this.errorMessage = null;
+        } else if (type === 'error') {
+            this.errorMessage = message;
+            this.successMessage = null;
+        } else {
+            this.successMessage = null;
+            this.errorMessage = null;
+        }
+        
+        if (type === 'success') {
+            setTimeout(() => {
+                this.successMessage = null;
+            }, 3000); 
+        }
+    },
     async loadGroupDetails() {
+      this.setMessages('clear');
       try {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -103,15 +142,19 @@ export default {
             Authorization: `Bearer ${token}`,
           },
         });
-        const groupImage = response.data.groupPhoto;
-        this.groupImage = groupImage ? `data:image/*;base64,${groupImage}` : null;
+        const photoBase64 = response.data.groupPhoto;
+        
+        this.groupImage = photoBase64 ? `data:image/png;base64,${photoBase64}` : null;
         this.groupMembers = response.data.members;
+        this.groupName = response.data.name; 
+        localStorage.setItem("groupName", this.groupName);
       } catch (error) {
         console.error("Unable to load group details:", error);
-        this.errorMessage = "Unable to load group information. Please attempt again later.";
+        this.setMessages('error', "Unable to load group information. Please attempt again later.");
       }
     },
     processImageSelection(event) {
+      this.setMessages('clear');
       const selectedFile = event.target.files[0];
       if (selectedFile) {
         this.newGroupImage = selectedFile;
@@ -119,6 +162,8 @@ export default {
     },
     async modifyGroupImage() {
       if (!this.newGroupImage) return;
+      this.setMessages('clear');
+      this.isLoading = true;
       try {
         const imageData = new FormData();
         imageData.append("photo", this.newGroupImage);
@@ -127,16 +172,21 @@ export default {
             Authorization: `Bearer ${this.token}`,
           },
         });
-        alert("Group image successfully updated!");
+        this.setMessages('success', "Group image successfully updated!");
         this.newGroupImage = null;
         this.loadGroupDetails();
+      
       } catch (error) {
         console.error("Unable to update group image:", error);
-        this.errorMessage = "Unable to update group image. Please attempt again.";
+        this.setMessages('error', "Unable to update group image. Please attempt again.");
+      } finally {
+        this.isLoading = false;
       }
     },
     async modifyGroupTitle() {
       if (!this.updatedGroupTitle || this.updatedGroupTitle === this.groupName) return;
+      this.setMessages('clear');
+      this.isLoading = true;
       try {
         await axios.put(
           `/groups/${this.groupId}/name`,
@@ -147,17 +197,20 @@ export default {
             },
           }
         );
-        alert("Group name successfully updated!");
+        this.setMessages('success', "Group name successfully updated!");
         localStorage.setItem("groupName", this.updatedGroupTitle);
         this.groupName = this.updatedGroupTitle;
         this.updatedGroupTitle = "";
       } catch (error) {
         console.error("Unable to update group title:", error);
-        this.errorMessage = "Unable to update group title. Please attempt again.";
+        this.setMessages('error', "Unable to update group title. Please attempt again.");
+      } finally {
+        this.isLoading = false;
       }
     },
     async exitGroup() {
-      if (!confirm('Are you certain you wish to exit this group?')) {
+      if (!confirm('Are you sure you wish to exit this group?')) 
+      {
         return;
       }
       try {
@@ -169,18 +222,19 @@ export default {
         this.$router.push({ path: "/groups" });
       } catch (error) {
         console.error("Unable to exit group:", error);
-        this.errorMessage = "Unable to exit group. Please attempt again.";
+        this.setMessages('error', "Unable to exit group. Please attempt again.");
+      } finally {
+        this.isLoading = false;
       }
     },  
     async findUsers() {
       if (!this.searchQuery.trim()) {
-        this.errorMessage = "Please provide a search term";
+        this.setMessages('error', "Please provide a search term.");
         this.displaySearchResults = false;
         return;
       }
-
+      this.setMessages('clear');
       this.isLoading = true;
-      this.errorMessage = null;
       try {
         const response = await axios.get(`/search`, {
           params: { username: this.searchQuery }
@@ -190,7 +244,7 @@ export default {
         this.displaySearchResults = true;
       } catch (error) {
         console.error("Search operation failed:", error);
-        this.errorMessage = "Unable to find users. Please attempt again.";
+        this.setMessages('error', "Unable to find users. Please attempt again.");
       } finally {
         this.isLoading = false;
       }
@@ -202,6 +256,7 @@ export default {
 
     async includeUserInGroup(userId) {
       if (this.isCurrentMember(userId)) return;
+      this.setMessages('clear');
       try {
         await axios.post(`/groups/${this.groupId}`, 
         {  
@@ -213,108 +268,70 @@ export default {
             },}
           );
         this.groupMembers.push(userId);
-        this.errorMessage = null;
+        this.setMessages('success', "User successfully added to the group!");
+        this.displaySearchResults = false;
+        this.searchResults = [];
+    
       } catch (error) {
         console.error("Unable to include user:", error);
-        this.errorMessage = "Unable to include user in group. Please attempt again.";
+        this.setMessages('error', "Unable to include user in group. Please attempt again.");
       }
   },
   },
   mounted() {
+    this.updatedGroupTitle = this.groupName; 
     this.loadGroupDetails();
   },
 };
 </script>
 
 <style scoped>
-.member-addition-section {
-  margin-top: 2rem;
-  padding: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.user-search-form {
-  display: flex;
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.search-field {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.search-submit-btn {
-  padding: 0.5rem 1rem;
-  background-color: #28a745;
-  color: white;
-}
-
-.search-result-area {
-  margin-top: 1rem;
-}
-
-.result-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.result-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.include-btn {
-  padding: 0.25rem 0.75rem;
-  background-color: #17a2b8;
-  color: white;
-}
-
-.include-btn:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-}
-
-.empty-results {
-  color: #666;
-  font-style: italic;
-  padding: 1rem;
-  text-align: center;
-}
 
 .group-settings-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 30px 20px;
+  background-color: #f7f9fb;
+  border-radius: 12px;
+  max-width: 900px;
+  margin: 20px auto;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .settings-header {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
+  gap: 30px;
   width: 100%;
-  max-width: 800px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0; /* Fixed: --color-border-light */
+  margin-bottom: 20px;
 }
+
+.group-details {
+  flex: 1;
+}
+
+.group-title {
+  margin: 0 0 15px 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #34495e; /* Fixed: --color-text-dark */
+}
+
 
 .group-image-wrapper {
   flex: 0 0 auto;
-  width: 120px;
-  height: 120px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid #ccc;
+  border: 4px solid #4a90e2; /* Fixed: --brand-color-primary */
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
 }
 
 .group-image {
@@ -325,49 +342,173 @@ export default {
 
 .no-image-placeholder {
   color: #aaa;
-  font-size: 14px;
+  font-size: 1rem;
+  text-align: center;
+  font-weight: 600;
 }
 
-.group-details {
-  flex: 1;
-}
 
-.groupName {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.name-update-section,
-.image-update-section {
-  margin-top: 10px;
+.update-section {
+  margin-top: 15px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
-input {
-  padding: 8px;
+.input-field {
+  flex: 1;
+  padding: 10px 12px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
+  transition: border-color 0.2s;
+  font-size: 1rem;
 }
+.input-field:focus {
+  border-color: #4a90e2; /* Fixed: --brand-color-primary */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.file-input {
+  flex: 1;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
 
 button {
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
+  padding: 10px 18px;
+  font-weight: 600;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background-color: #4a90e2; /* Fixed: --brand-color-primary */
+  color: white;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #3a74b6;
+}
+
+.btn-secondary {
+  background-color: #28a745; /* Fixed: --brand-color-secondary */
+  color: white;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: #1f8b36;
+}
+
+.btn-tertiary {
+  background-color: #f0f0f0;
+  color: #4a90e2; /* Fixed: --brand-color-primary */
+  border: 1px solid #4a90e2; /* Fixed: --brand-color-primary */
+  padding: 8px 14px;
+  font-size: 0.9rem;
+}
+.btn-tertiary:hover:not(:disabled) {
+  background-color: #e6f1fc;
+}
+
+.btn-danger {
+  background-color: #dc3545; /* Fixed: --brand-color-danger */
+  color: white;
+  margin-top: 30px;
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: #c82333;
 }
 
 button:disabled {
   background-color: #ccc;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-button:hover:not(:disabled) {
-  background-color: #0056b3;
+
+.member-addition-section {
+  width: 100%;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px dashed #e0e0e0; /* Fixed: --color-border-light */
+}
+
+.section-title {
+  color: #34495e; /* Fixed: --color-text-dark */
+  margin-top: 0;
+}
+
+.user-search-form {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.search-field {
+  flex: 1;
+}
+
+.search-result-area {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+.result-item:last-child {
+  border-bottom: none;
+}
+
+.result-username {
+  font-weight: 500;
+  color: #34495e; /* Fixed: --color-text-dark */
+}
+
+.empty-results {
+  color: #95a5a6;
+  font-style: italic;
+  padding: 10px;
+  text-align: center;
+}
+
+
+@media (max-width: 600px) {
+  .settings-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .group-image-wrapper {
+    margin-bottom: 20px;
+  }
+  .update-section,
+  .user-search-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .input-field,
+  button,
+  .file-input {
+    width: 100%;
+  }
 }
 </style>
 
