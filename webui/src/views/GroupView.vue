@@ -1,5 +1,6 @@
 <script>
 export default {
+  name: "GroupView",
   data() {
     return {
       username: "",
@@ -37,8 +38,8 @@ export default {
             path: `/groups/${groupId}`
         });
     },
-    refresh() {
-        this.loadGroups();
+    startChat() {
+        this.$router.push({ path: "/search" });
     },
     logOut() {
         this.$router.push({ path: "/" });
@@ -57,39 +58,48 @@ export default {
 <template>
   <div>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-      <h1 class="h2">{{ username }}, here are your groups</h1>
-      <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">Refresh</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">Log Out</button>
-        </div>
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-primary" @click="newGroup">New group</button>
-        </div>
+      <h1 class="h2 conversation-header">All groups</h1>
+      <div class="btn-toolbar mb-2 mb-md-0 button-group-container">
+        
+        <button type="button" class="btn-chat-primary" @click="startChat">
+          Start Chat
+        </button>
+
+        <button type="button" class="btn-chat-secondary" @click="newGroup">
+          New group
+        </button>
+
+        <button type="button" class="btn-chat-tertiary" @click="logOut">
+          Log Out
+        </button>
       </div>
     </div>
     <ErrorMsg v-if="errormsg" :msg="errormsg" />
+
     <div>
       <p v-if="loading">Loading...</p>
       <div v-else-if="groups.length === 0">
-        <p>No groups found.</p>
+        <p>No groups found. Click "New group" to create one.</p>
       </div>
-      <div v-else class="conversations-container">
+      <div v-else class="groups-container">
         <div
           v-for="group in groups"
           :key="group.id"
-          class="conversation-block"
+          class="group-block"
           @click="viewGroup(group.id, group.name)"
         >
-          <div class="conversation-photo">
+          <div class="group-photo">
             <img
               v-if="group.conversationPhoto.String"
               :src="'data:image/png;base64,' + group.conversationPhoto.String"
               alt="Group Photo"
-              class="profile-picture"
+              class="group-picture"
             />
+             <div v-else class="group-picture placeholder">
+                 #
+             </div>
           </div>
-          <div class="conversation-details">
+          <div class="group-details">
             <h4>{{ group.name }}</h4>
           </div>
         </div>
@@ -99,97 +109,136 @@ export default {
 </template>
 
 <style scoped>
-.d-flex {
-  display: flex;
+.conversation-header {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
 }
 
-.justify-content-between {
-  justify-content: space-between;
+.button-group-container {
+    display: flex;
+    gap: 10px;
 }
 
-.flex-wrap {
-  flex-wrap: wrap;
+/* Primary Button: Start Chat */
+.btn-chat-primary {
+    background-color: #4a90e2;
+    color: white;
+    border: 1px solid #4a90e2;
+    padding: 10px 18px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
 }
 
-.align-items-center {
-  align-items: center;
+.btn-chat-primary:hover {
+    background-color: #3a74b6;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 }
 
-.pt-3 {
-  padding-top: 1rem;
+/* Secondary Button: New group */
+.btn-chat-secondary {
+    background-color: white;
+    color: #4a90e2;
+    border: 1px solid #4a90e2;
+    padding: 10px 18px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+    cursor: pointer;
 }
 
-.pb-2 {
-  padding-bottom: 0.5rem;
+.btn-chat-secondary:hover {
+    background-color: #e6f1fc;
+    color: #3a74b6;
 }
 
-.mb-3 {
-  margin-bottom: 1rem;
+/* Tertiary Button: Log Out */
+.btn-chat-tertiary {
+    background-color: transparent;
+    color: #7f8c8d;
+    border: 1px solid #bdc3c7;
+    padding: 10px 18px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+    cursor: pointer;
 }
 
-.border-bottom {
-  border-bottom: 1px solid #dee2e6;
+.btn-chat-tertiary:hover {
+    background-color: #ecf0f1;
+    color: #34495e;
+    border-color: #34495e;
 }
-
-.btn-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.btn-group {
-  position: relative;
-  display: inline-flex;
-  vertical-align: middle;
-}
-
-.me-2 {
-  margin-right: 0.5rem;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-
-.mb-md-0 {
-  margin-bottom: 0;
-}
-
-.conversations-container {
+.groups-container {
   display: flex;
   flex-direction: column;
 }
 
-.conversation-block {
-  background-color: #f0f0f0;
+.group-block {
+  
+  background-color: white; 
   padding: 15px;
-  margin-bottom: 10px;
+  margin-bottom: 12px; 
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 10px; 
   display: flex;
-  align-items: center;
-  gap: 15px;
+  align-items: center;  
+  gap: 15px;  
+  border: 1px solid #ecf0f1; 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); 
+  transition: all 0.2s ease;
 }
 
-.conversation-photo {
-  flex-shrink: 0;
-  width: 75px;
-  height: 75px;
+.group-block:hover {
+    background-color: #f7f9fc; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-.profile-picture {
-  width: 75px;
-  height: 75px;
+.group-photo {
+  flex-shrink: 0;  
+  width: 50px; 
+  height: 50px; 
+}
+
+.group-picture {
+  width: 50px;
+  height: 50px;
   object-fit: cover;
   border-radius: 50%;
+  border: 2px solid #4a90e2; 
 }
 
-.conversation-details h4 {
+.group-picture.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e6f1fc;
+    color: #4a90e2;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.group-details h4 {
   margin-top: 0;
   margin-bottom: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #95a5a6;
+    font-style: italic;
+}
+
+
+
 @media (max-width: 600px) {
-  .conversation-block {
+  .group-block {
     flex-direction: column;
     align-items: flex-start;
   }

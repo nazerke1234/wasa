@@ -1,50 +1,59 @@
 <template>
-  <div>
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-      <h1 class="h2">{{ userName }}, here is your profile</h1>
-      <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">Refresh</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">Log Out</button>
-        </div>
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-primary" @click="newGroup">New group</button>
-        </div>
-      </div>
-    </div>
+  <div class="profile-page">
     
-    <div class="profile-container">
-      <div class="profile-header">
-        <div class="photo-container">
-          <img v-if="userPhoto" :src="userPhoto" alt="User Photo" class="profile-photo" />
-          <p v-else class="no-photo-placeholder">No Photo</p>
-        </div>
-        <div class="username-container">
-          <h1 class="username">{{ userName }}</h1>
-          <div class="update-username-section">
-            <input
-              v-model="newUserName"
-              placeholder="Enter new username"
-              maxlength="16"
-              minlength="3"
-            />
-            <button
-              class="custom-button"
-              @click="updateUsername"
-              :disabled="!newUserName || newUserName === userName"
-            >
-              Update Username
-            </button>
-          </div>
-          <div class="update-photo-section">
-            <input type="file" @change="handlePhotoUpload" accept="image/*" />
-            <button class="custom-button" @click="updatePhoto" :disabled="!newPhoto">
-              Update Photo
-            </button>
-          </div>
-        </div>
+    <header class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 profile-topbar-custom">
+      <h2 class="username-header">{{ userName }}, welcome to your profile</h2>
+      
+      <button type="button" class="btn-chat-tertiary" @click="logOut">
+        Log Out
+      </button>
+    </header>
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <!-- Avatar -->
+      <div class="avatar-wrapper">
+        <img
+          v-if="userPhoto"
+          :src="userPhoto"
+          class="avatar"
+          alt="Profile photo"
+        />
+        <div v-else class="avatar placeholder">No photo</div>
       </div>
+
+      <!-- Update photo -->
+      <div class="form-group">
+        <input type="file" @change="handlePhotoUpload" />
+        <button
+          class="primary-btn"
+          @click="updatePhoto"
+          :disabled="!newPhoto"
+        >
+          Update Photo
+        </button>
+      </div>
+
+      <!-- User Info -->
+      <div class="form-group">
+        <input
+            v-model="newUserName"
+            placeholder="New username"
+            maxlength="16"
+            minlength="3"
+          />
+          <button
+            class="primary-btn"
+            :disabled="!canUpdateUsername"
+            @click="updateUsername"
+          >
+            Update Username
+          </button>
+      </div>
+
       <ErrorMsg v-if="errormsg" :msg="errormsg" />
+      <SuccessMsg v-if="successmsg" :msg="successmsg" />
+
     </div>
   </div>
 </template>
@@ -53,10 +62,12 @@
 import axios from "../services/axios";
 import ErrorMsg from "../components/ErrorMsg.vue";
 
+import SuccessMsg from "../components/SuccessMsg.vue";
 export default {
   name: "ProfileView",
   components: {
     ErrorMsg,
+    SuccessMsg,
   },
   data() {
     return {
@@ -64,9 +75,21 @@ export default {
       userPhoto: null, 
       newUserName: "", 
       newPhoto: null, 
-      errormsg: null, 
+      errormsg: null,
+      successmsg: null, 
     };
   },
+  computed: {
+    canUpdateUsername() {
+      return (
+        this.newUserName &&
+        this.newUserName !== this.userName &&
+        this.newUserName.length >= 3 &&
+        this.newUserName.length <= 16
+      );
+    },
+  },
+
   methods: {
     async fetchUserProfile() {
       try {
@@ -75,37 +98,39 @@ export default {
           this.$router.push({ path: "/" });
           return;
         }
-        const response = await axios.get("/users/photo", {
+        const res = await axios.get("/users/photo", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        const { photo } = response.data;
         this.userName = localStorage.getItem("name");
-        this.userPhoto = photo ? `data:image/jpeg;base64,${photo}` : null;
-      } catch (error) {
-        console.error("Failed to fetch user profile:", error);
+        this.userPhoto = res.data.photo
+          ? `data:image/jpeg;base64,${res.data.photo}`
+          : null;
+      } catch (e) {
+        console.error("Failed to fetch user profile:", e);
         this.errormsg = "Failed to load user profile. Please try again later.";
       }
     },
-    handlePhotoUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        this.newPhoto = file;
-      }
+    handlePhotoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      this.newPhoto = file;
     },
     async updatePhoto() {
       if (!this.newPhoto) return;
+      this.errormsg = null;
       try {
         const token = localStorage.getItem("token");
-        const formData = new FormData();
-        formData.append("photo", this.newPhoto);
-        await axios.put("/users/photo", formData, {
+        const form = new FormData();
+        form.append("photo", this.newPhoto);
+        await axios.put("/users/photo", form, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        alert("Photo updated successfully!");
+        this.successmsg = "Username updated successfully!";
+        setTimeout(() => { this.successmsg = null; }, 3000);
         this.newPhoto = null;
         this.fetchUserProfile(); 
       } catch (error) {
@@ -114,7 +139,6 @@ export default {
       }
     },
     async updateUsername() {
-      if (!this.newUserName || this.newUserName === this.userName) return;
       try {
         const token = localStorage.getItem("token");
         const response = await axios.put(
@@ -126,7 +150,9 @@ export default {
             },
           }
         );
-        alert("Username updated successfully!");
+        this.successmsg = "Username updated successfully!";
+        this.errormsg = null; // Clear any previous error
+        setTimeout(() => { this.successmsg = null; }, 3000);
         localStorage.setItem("name", this.newUserName);
         this.userName = response.data.name;
         this.newUserName = response.data.name;
@@ -135,16 +161,12 @@ export default {
         this.errormsg = "Failed to update username. Please try again.";
       }
     },
-    refresh() {
-      this.fetchUserProfile();
-    },
+    
     logOut() {
       localStorage.clear();
       this.$router.push({ path: "/" });
     },
-    newGroup() {
-      this.$router.push({ path: "/new-group" });
-    }
+
   },
   mounted() {
     this.fetchUserProfile();
@@ -153,90 +175,114 @@ export default {
 </script>
 
 <style scoped>
-.profile-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
+.profile-page {
+  min-height: calc(100vh - 60px);
+  justify-content: center;
+  padding-top: 40px;
+  background: #f4f7fb;
 }
 
-.profile-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
+.profile-topbar-custom {
+  background: #f4f7fb;
+  color: black;
+  padding: 25px 20px; 
+    
+}
+
+.username-header {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0;
+  color: #2c3e50;
+}
+
+.btn-chat-tertiary {
+  background-color: transparent;
+  color: #7f8c8d;
+  border: 1px solid #bdc3c7;
+    
+  padding: 10px 18px; 
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-chat-tertiary:hover {
+  background-color: #ecf0f1;
+  color: #34495e;
+  border-color: #34495e;
+}
+
+.btn-chat-tertiary:active {
+  transform: scale(0.97);
+}
+
+/* Card */
+.profile-card {
   width: 100%;
-  max-width: 800px;
+  max-width: 420px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
-.photo-container {
-  width: 120px;
-  height: 120px;
+.avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
-  overflow: hidden;
-  border: 1px solid #ccc;
+  object-fit: cover;
+  border: 4px solid #4a90e2;
+}
+
+.avatar.placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
-}
-
-.profile-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.no-photo-placeholder {
-  color: #aaa;
+  background: #f0f0f0;
+  color: #888;
   font-size: 14px;
 }
 
-.username-container {
-  flex: 1;
-}
 
-.username {
-  margin: 0;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.update-username-section,
-.update-photo-section {
-  margin-top: 10px;
+.form-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
+  margin-bottom: 18px;
 }
 
-input {
-  padding: 8px;
+.form-group input[type="text"],
+.form-group input[type="file"] {
+  padding: 10px 12px;
+  border-radius: 8px;
   border: 1px solid #ccc;
-  border-radius: 4px;
-  flex: 1;
-  max-width: 300px;
+  font-size: 14px;
 }
 
-.custom-button {
-  padding: 8px 16px;
-  background-color: transparent;
-  border: 1px solid #007bff;
-  color: #007bff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.custom-button:hover:not(:disabled) {
-  background-color: #007bff;
+.primary-btn {
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  background-color: #4a90e2;
   color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.custom-button:disabled {
-  border-color: #cccccc;
-  color: #cccccc;
-  cursor: not-allowed;
-  background-color: transparent;
+.primary-btn:disabled {
+  background: #aac7ed;
+    cursor: not-allowed;
 }
 </style>

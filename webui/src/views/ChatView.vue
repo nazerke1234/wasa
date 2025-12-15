@@ -198,7 +198,8 @@ export default {
       this.messages = (response.data.messages || []).map(msg => ({
         ...msg,
         reactingUserNames: msg.reactingUserNames || [],
-        showReactedList: false
+        showReactedList: false,
+        reactionLoading: false,
       }));
       if (response.data.name) {
         this.convName = response.data.name;
@@ -226,6 +227,7 @@ export default {
       const token = localStorage.getItem("token");
       if (!token || message.senderId === this.userToken) return;
       const hasReacted = (message.reactingUserNames || []).includes(this.userName);
+      message.reactionLoading = true;
       try {
         if (hasReacted) {
           await axios.delete(`/conversations/${this.conversationId}/message/${message.id}/comment`, {
@@ -239,6 +241,7 @@ export default {
       } catch (err) {
         console.error("Error toggling reaction", err);
       } finally {
+        message.reactionLoading = false;
         await this.fetchMessages();
       }
     },

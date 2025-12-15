@@ -95,7 +95,7 @@ export default {}
 }
 
 .sidebar-link:hover {
-  color: #2f36faff; /* gold hover */
+  color: #4a90e2; /* gold hover */
 }
 
 /* Sidebar link default style */
@@ -106,7 +106,7 @@ export default {}
 
 /* Sidebar link on hover */
 .sidebar .nav-link:hover {
-  color: #2f36faff; /* change to any color you like on hover */
+  color: #4a90e2; /* change to any color you like on hover */
   text-decoration: none; /* remove underline if any */
 }
 
@@ -125,7 +125,7 @@ export default {}
 
 /* Adjust main content */
 main {
-  background-color: #f8f9fa; /* optional */
+  background-color: #f4f7fb; /* optional */
   min-height: 100vh;
   padding-top: 1rem;
 }

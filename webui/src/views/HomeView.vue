@@ -1,21 +1,27 @@
 <template>
   <div>
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-      <h1 class="h2">{{ username }}, here are your conversations</h1>
-      <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">Refresh</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" @click="logOut">Log Out</button>
-        </div>
-        <div class="btn-group me-2">
-          <button type="button" class="btn btn-sm btn-outline-primary" @click="newGroup">New group</button>
-        </div>
+      <h1 class="h2">All conversations</h1>
+      <div class="btn-toolbar mb-2 mb-md-0 button-group-container">
+        
+        <button type="button" class="btn-chat-primary" @click="startChat">
+          Start Chat
+        </button>
+
+        <button type="button" class="btn-chat-secondary" @click="newGroup">
+          New group
+        </button>
+
+        <button type="button" class="btn-chat-tertiary" @click="logOut">
+          Log Out
+        </button>
       </div>
     </div>
+
     <ErrorMsg v-if="errormsg" :msg="errormsg" />
     <div>
       <div v-if="conversations.length === 0">
-        <p>No conversations found.</p>
+        <p>You have no conversations yet. Click "Start Chat" to begin.</p>
       </div>
       <div v-else class="conversations-container">
         <div
@@ -117,8 +123,8 @@ export default {
       }
       return this.truncateText(message.content);
     },
-    refresh() {
-      this.loadConversations();
+    startChat() {
+      this.$router.push({ path: "/search" });
     },
     logOut() {
       this.$router.push({ path: "/" });
@@ -132,7 +138,7 @@ export default {
     this.loadConversations();
     this.pollIntervalId = setInterval(() => {
       this.loadConversations();
-    }, 1000);
+    }, 5000);
   },
   unmounted() {
     clearInterval(this.pollIntervalId);
@@ -141,11 +147,75 @@ export default {
 </script>
 
 <style>
-.username-display {
-  font-size: 16px;
-  color: #555;
-  margin-top: -10px;
-  margin-bottom: 20px;
+.pt-3 {
+    padding-top: 1.5rem !important;
+}
+.pb-2 {
+    padding-bottom: 0.5rem !important;
+}
+.mb-4 {
+    margin-bottom: 1.5rem !important; /* Adjusted margin for better separation */
+}
+
+.conversation-header {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.button-group-container {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+}
+
+
+/* Primary Button: Start Chat */
+.btn-chat-primary {
+    background-color: #4a90e2;
+    color: white;
+    border: 1px solid #4a90e2;
+    padding: 10px 18px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-chat-primary:hover {
+    background-color: #3a74b6;
+    box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+}
+
+/* Secondary Button: New group */
+.btn-chat-secondary {
+    background-color: white;
+    color: #4a90e2;
+    border: 1px solid #4a90e2;
+    padding: 10px 18px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-chat-secondary:hover {
+    background-color: #e6f1fc;
+    color: #3a74b6;
+}
+
+/* Tertiary Button: Log Out */
+.btn-chat-tertiary {
+    background-color: transparent;
+    color: #7f8c8d;
+    border: 1px solid #bdc3c7;
+    padding: 10px 18px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-chat-tertiary:hover {
+    background-color: #ecf0f1;
+    color: #34495e;
+    border-color: #34495e;
 }
 
 .conversations-container {
@@ -154,47 +224,62 @@ export default {
 }
 
 .conversation-block {
-  background-color: #f0f0f0; 
+  background-color: white; 
   padding: 15px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 10px;
   display: flex;
   align-items: center; 
-  gap: 15px; 
+  gap: 15px;
+  border: 1px solid #ecf0f1; 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); 
+  transition: all 0.2s ease; 
 }
 
 .conversation-photo {
   flex-shrink: 0; 
-  width: 75px; 
-  height: 75px; 
+  width: 50px; 
+  height: 50px; 
 }
 
 .profile-picture {
-  width: 75px;
-  height: 75px;
+  width: 50px;
+  height: 50px;
   object-fit: cover;
   border-radius: 50%;
+  border: 2px solid #4a90e2;
 }
 
 .conversation-details h4 {
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: 2px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .last-message {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 4px 0;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
 }
 
 .attachment-thumbnail {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   object-fit: cover;
-  border-radius: 3px;
+  border-radius: 2px;
   flex-shrink: 0;
+}
+
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: #95a5a6;
+    font-style: italic;
 }
 
 @media (max-width: 600px) {
