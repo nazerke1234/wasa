@@ -60,9 +60,9 @@ export default {}
 </template>
 
 <style>
-/* Custom Navbar */
+
 .custom-navbar {
-  background-color: #4a90e2; /* blue background */
+  background-color: #4a90e2;
   height: 70px;
   padding: 0 20px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -71,22 +71,21 @@ export default {}
   justify-content: space-between;
 }
 
-/* Navbar brand (WASAText) */
 .custom-brand {
-  font-size: 28px;       /* bigger font */
-  font-weight: bold;     /* bold */
-  color: #fff !important; /* white text */
-  font-family: 'Segoe UI', sans-serif; /* custom font */
-  letter-spacing: 2px;   /* spacing between letters */
+  font-size: 28px;       
+  font-weight: bold;     
+  color: #fff !important; 
+  font-family: 'Segoe UI', sans-serif; 
+  letter-spacing: 2px;  
 }
 
-/* Sidebar background */
+
 .bg-custom-sidebar {
-  background-color: #343a40; /* dark gray */
+  background-color: #343a40; 
   color: #fff;
 }
 
-/* Sidebar links */
+
 .sidebar-link {
   color: #fff;
   font-weight: 500;
@@ -95,35 +94,34 @@ export default {}
 }
 
 .sidebar-link:hover {
-  color: #4a90e2; /* gold hover */
+  color: #4a90e2; 
 }
 
-/* Sidebar link default style */
+
 .sidebar .nav-link {
-  color: #fff; /* default text color */
-  transition: color 0.3s; /* smooth color change */
+  color: #fff; 
+  transition: color 0.3s; 
 }
 
-/* Sidebar link on hover */
+
 .sidebar .nav-link:hover {
-  color: #4a90e2; /* change to any color you like on hover */
-  text-decoration: none; /* remove underline if any */
+  color: #4a90e2; 
+  text-decoration: none; 
 }
 
-/* Sidebar headings */
+
 .sidebar-heading {
   color: #ccc;
   font-weight: bold;
   font-size: 14px;
 }
 
-/* Remove bullet points */
+
 .nav.flex-column {
   list-style: none;
   padding-left: 0;
 }
 
-/* Adjust main content */
 main {
   background-color: #f4f7fb; /* optional */
   min-height: 100vh;
