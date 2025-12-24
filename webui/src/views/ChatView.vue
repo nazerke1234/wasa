@@ -116,7 +116,7 @@
             </div>
           </div>
         </div>
-        <div class="message-status" v-if="message.status && message.senderId !== userToken">
+        <div class="message-status" v-if="message.status && message.senderId === userToken">
           {{ message.status }}
         </div>
       </div>
@@ -517,9 +517,7 @@ export default {
   border-radius: 50%;
   margin-right: 8px;
 }
-/* ------------------------------------
-   MESSAGES AREA
-------------------------------------- */
+
 .chat-messages {
   display: flex;
   flex-direction: column;
@@ -531,9 +529,7 @@ export default {
   border-bottom: 1px solid #ccc;
 }
 
-/* ------------------------------------
-   MESSAGE BUBBLES
-------------------------------------- */
+
 .message {
   position: relative;
   max-width: 68%;
@@ -545,13 +541,14 @@ export default {
   box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
 
-/* User message */
+
 .message.self {
   margin-left: auto;
   background-color: #bcf9deff;
+  padding-bottom: 20px;
 }
 
-/* Group thumbnails */
+
 .sender-thumbnail {
   position: absolute;
   left: 10px;
@@ -567,9 +564,7 @@ export default {
   object-fit: cover;
 }
 
-/* ------------------------------------
-   TEXT & TIMESTAMP
-------------------------------------- */
+
 .message p {
   margin: 0;
   color: #2f2f2fff;
@@ -587,9 +582,7 @@ export default {
   position: relative;
   min-height: 40px;
 }
-/* ------------------------------------
-   ATTACHMENTS
-------------------------------------- */
+
 .attachment-container {
   margin-top: 8px;
   width: 260px;
@@ -605,9 +598,7 @@ export default {
   object-fit: cover;
 }
 
-/* ------------------------------------
-   ACTION BUTTONS (Reply / Heart / Delete)
-------------------------------------- */
+
 .action-buttons {
   position: absolute;
   top: 50%;
@@ -629,7 +620,7 @@ export default {
   opacity: 1;
 }
 
-/* ACTION BUTTONS - Always visible, modern style */
+
 .action-button {
   width: 24px;
   height: 24px;
