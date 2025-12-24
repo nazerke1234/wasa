@@ -26,6 +26,15 @@ func (rt *_router) startConversation(
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+
+	if req.SenderID == req.RecipientID {
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusBadRequest) // 400 Error
+        json.NewEncoder(w).Encode(map[string]string{
+            "error": "You cannot start a conversation with yourself",
+        })
+        return
+    }
 	if req.SenderID == "" || req.RecipientID == "" {
 		http.Error(w, "Missing senderId or recipientId", http.StatusBadRequest)
 		return

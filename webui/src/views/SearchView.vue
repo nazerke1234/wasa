@@ -14,6 +14,7 @@
       </div>
     </div>
     <div class="search-container">
+  
       <form @submit.prevent="searchUsers" class="search-form">
         <input
           id="username"
@@ -39,7 +40,7 @@
         <template v-if="users.length > 0">
           <div v-for="user in users" :key="user.id" class="user-card-new">
             <h5 class="user-name-new">
-              @{{ user.name }}
+              @{{ user.name }} <span v-if="user.name === userName">(You)</span>
             </h5>
             <button
               class="text-button btn-chat-primary"
@@ -105,8 +106,11 @@ export default {
       }
     },
     navigateToConversation(recipientId, recipientName) {
+      this.error = "";
+      
       localStorage.setItem("conversationName", recipientName);
       const senderId = localStorage.getItem("token");
+      
       axios
         .post(`/conversations`, { senderId, recipientId })
         .then((response) => {
@@ -117,7 +121,12 @@ export default {
         })
         .catch((error) => {
           console.error("Error starting conversation:", error);
-          this.error = "Failed to start conversation. Please try again.";
+          if (error.response && error.response.data && error.response.data.error) {
+            this.error = error.response.data.error; // "You cannot start a conversation with yourself"
+          } else {
+            this.error = "Failed to start conversation. Please try again.";
+          }
+
         });
     },
     
@@ -212,7 +221,7 @@ export default {
   display: flex;
   gap: 10px;
   justify-content: center;
-  margin-bottom: 300px;
+  margin-bottom: 20px;
 }
 
 search-box {
@@ -273,14 +282,16 @@ search-box {
   font-size: 14px;
 }
 .error-box {
-  background-color: #3a1f28;
-  color: #ffb3c6;
-  border: 1px solid #6b4f4f;
-  border-radius: 5px;
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  border-radius: 8px;
   padding: 10px;
   margin: 20px 0;
   text-align: center;
 }
+
+
 
 .no-results {
   font-size: 16px;

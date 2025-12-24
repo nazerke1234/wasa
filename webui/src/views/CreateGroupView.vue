@@ -273,7 +273,7 @@ export default {
     color:  #34495e;
 }
 
-/* Reusing standard input field style */
+
 .app-input-field {
   padding: 12px;
   border: 1px solid  #e0e0e0;
@@ -295,7 +295,7 @@ export default {
   gap: 10px;
 }
 
-/* Standard Button Styles */
+
 .btn-primary, .btn-secondary {
     padding: 12px 20px;
     font-weight: 600;
@@ -306,7 +306,7 @@ export default {
     white-space: nowrap;
 }
 
-/* Search button uses secondary color (Green) */
+
 .btn-secondary {
     background-color: #28a745; 
     color: white;
