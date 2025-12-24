@@ -25,7 +25,7 @@
         <button class="search-button btn-chat-primary" type="submit">Search</button>
       </form>
       
-      <div v-if="error" class="error-alert">
+      <div v-if="error" class="error-box">
         {{ error }}
       </div>
       
@@ -271,6 +271,15 @@ search-box {
 .text-button.btn-chat-primary {
   padding: 8px 15px;
   font-size: 14px;
+}
+.error-box {
+  background-color: #3a1f28;
+  color: #ffb3c6;
+  border: 1px solid #6b4f4f;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 20px 0;
+  text-align: center;
 }
 
 .no-results {

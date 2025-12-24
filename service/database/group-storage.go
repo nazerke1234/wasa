@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	
 )
 
 func (db *appdbimpl) CreateGroupConversation(conversationID string, memberIDs []string, name string, photo []byte) error {
@@ -31,12 +32,16 @@ func (db *appdbimpl) CreateGroupConversation(conversationID string, memberIDs []
 func (db *appdbimpl) GetMyGroups(userID string) ([]Conversation, error) {
 	query := `
     SELECT 
-        c.id,
-        c.name,
-        c.conversationPhoto as photo
+        c.id, 
+        c.name, 
+        c.conversationPhoto as photo,
+        GROUP_CONCAT(u.name) AS member_names
     FROM conversations c
-    JOIN conversation_members cm ON c.id = cm.conversationId
-    WHERE cm.userId = ? AND c.type = 'group'
+    JOIN conversation_members cm_filter ON c.id = cm_filter.conversationId
+    LEFT JOIN conversation_members cm_all ON c.id = cm_all.conversationId
+    LEFT JOIN users u ON cm_all.userId = u.id
+    WHERE cm_filter.userId = ? AND c.type = 'group'
+    GROUP BY c.id
     ORDER BY c.created_at DESC;
     `
 	rows, err := db.c.Query(query, userID)
@@ -48,10 +53,13 @@ func (db *appdbimpl) GetMyGroups(userID string) ([]Conversation, error) {
 	for rows.Next() {
 		var group Conversation
 		var photo sql.NullString
+		var membersCSV sql.NullString
+
 		err := rows.Scan(
 			&group.Id,
 			&group.Name,
 			&photo,
+			&membersCSV,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning group: %w", err)
@@ -62,6 +70,11 @@ func (db *appdbimpl) GetMyGroups(userID string) ([]Conversation, error) {
 		} else {
 			group.ConversationPhoto = sql.NullString{String: "", Valid: false}
 		}
+		if membersCSV.Valid && membersCSV.String != "" {
+            group.Members = strings.Split(membersCSV.String, ",")
+        } else {
+            group.Members = []string{}
+        }
 		groups = append(groups, group)
 	}
 	if err = rows.Err(); err != nil {

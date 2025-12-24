@@ -43,7 +43,15 @@
     
     <ErrorMsg v-if="errorMessage" :msg="errorMessage" />
     <SuccessMsg v-if="successMessage" :msg="successMessage" />
-
+    <div class="current-members-section">
+      <h3 class="section-title">Current Members</h3>
+      <div class="members-badge-container">
+        <span v-if="groupMembers && groupMembers.length" class="member-names-list">
+          {{ groupMembers.join(', ') }}
+        </span>
+        <span v-else class="member-names none">Only you</span>
+      </div>
+    </div>
     <div class="member-addition-section">
       <h3 class="section-title">Include New Members</h3>
       
@@ -287,6 +295,32 @@ export default {
 
 <style scoped>
 
+.current-members-section {
+  width: 100%;
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border-left: 5px solid #4a90e2; /* Accent color */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.members-badge-container {
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.member-names-list {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.member-names.none {
+  color: #95a5a6;
+  font-style: italic;
+}
+
 .group-settings-panel {
   display: flex;
   flex-direction: column;
@@ -317,7 +351,7 @@ export default {
   margin: 0 0 15px 0;
   font-size: 2.2rem;
   font-weight: 700;
-  color: #34495e; /* Fixed: --color-text-dark */
+  color: #34495e; 
 }
 
 
@@ -327,7 +361,7 @@ export default {
   height: 150px;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid #4a90e2; /* Fixed: --brand-color-primary */
+  border: 4px solid #4a90e2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -434,11 +468,11 @@ button:disabled {
   width: 100%;
   margin-top: 30px;
   padding-top: 20px;
-  border-top: 1px dashed #e0e0e0; /* Fixed: --color-border-light */
+  border-top: 1px dashed #e0e0e0; 
 }
 
 .section-title {
-  color: #34495e; /* Fixed: --color-text-dark */
+  color: #34495e; 
   margin-top: 0;
 }
 

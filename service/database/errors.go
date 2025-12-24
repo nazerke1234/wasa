@@ -9,4 +9,5 @@ var (
 	ErrCommentDoesNotExist         = errors.New("comment does not exist")
 	ErrUnauthorizedToDeleteMessage = errors.New("unauthorized To Delete Message")
 	ErrGroupDoesNotExist           = errors.New("group does not exist")
+	ErrUserAlreadyExists           = errors.New("username already taken")
 )

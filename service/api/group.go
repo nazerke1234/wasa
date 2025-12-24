@@ -25,6 +25,7 @@ func (rt *_router) createGroup(
 	name := r.FormValue("name")
 	membersStr := r.FormValue("members")
 	var members []string
+	var photo []byte
 	err = json.Unmarshal([]byte(membersStr), &members)
 	if err != nil {
 		http.Error(w, "Invalid members format", http.StatusBadRequest)
@@ -32,16 +33,21 @@ func (rt *_router) createGroup(
 	}
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "No image file provided", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-	photo, err := io.ReadAll(file)
-	if err != nil {
-		ctx.Logger.WithError(err).Error("Failed to read image file")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+		if errors.Is(err, http.ErrMissingFile) {
+			photo = nil 
+		} else {
+			http.Error(w, "Error retrieving the file", http.StatusBadRequest)
+            return
+        }
+    } else {
+        defer file.Close()
+        photo, err = io.ReadAll(file)
+        if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+            return
+        }
+    }
+
 	conversationID, err := generateNewID()
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to generate conversation ID")
@@ -111,6 +117,7 @@ func (rt *_router) getGroup(
 		"id":      group.Id,
 		"name":    group.Name,
 		"members": group.Members,
+		"type":    "group",
 	}
 	if group.ConversationPhoto.Valid {
 		response["groupPhoto"] = group.ConversationPhoto.String

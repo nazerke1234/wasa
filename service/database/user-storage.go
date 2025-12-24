@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 func (db *appdbimpl) CreateUser(u User) (User, error) {
@@ -45,6 +46,9 @@ func (db *appdbimpl) GetUserById(id string) (User, error) {
 func (db *appdbimpl) UpdateUserName(userId, newName string) (User, error) {
 	result, err := db.c.Exec(`UPDATE users SET name=? WHERE id=?`, newName, userId)
 	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return User{}, ErrUserAlreadyExists
+		}
 		return User{}, err
 	}
 	affected, err := result.RowsAffected()

@@ -101,6 +101,13 @@ export default {
           </div>
           <div class="group-details">
             <h4>{{ group.name }}</h4>
+            <div class="members-list">
+                 <span class="member-label">Members:</span>
+                 <span v-if="group.members && group.members.length" class="member-names">
+                     {{ group.members.join(', ') }}
+                 </span>
+                 <span v-else class="member-names none">Only you</span>
+            </div>
           </div>
         </div>
       </div>
@@ -226,6 +233,43 @@ export default {
   margin-bottom: 0;
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.members-list {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    display: flex;
+    gap: 5px;
+}
+
+.member-label {
+    font-weight: 600;
+    color: #95a5a6;
+}
+
+.member-names {
+    /* Prevents the list from breaking the layout if it's too long */
+    display: inline-block;
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-names.none {
+    font-style: italic;
+}
+
+.group-members {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    /* Limits the list to one line with ellipsis if too long */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
 }
 
 .empty-state {

@@ -1,10 +1,27 @@
 <template>
   <div class="chat-container">
     <div class="chat-header">
-      <div class="chat-photo" v-if="conversationPhoto">
-        <img :src="'data:image/jpeg;base64,' + conversationPhoto" alt="Chat Thumbnail" />
+      <div class="header-left">
+        <div class="chat-photo" v-if="conversationPhoto">
+          <img :src="'data:image/jpeg;base64,' + conversationPhoto" alt="Chat Thumbnail" />
+        </div>
+        <h3>{{ convName }}</h3>
       </div>
-      <h3>{{ convName }}</h3>
+
+      <div v-if="conversationType === 'group'" class="header-right">
+        <button class="members-toggle-btn" @click.stop="showMembers = !showMembers">
+          👥 {{ members.length }} Members
+        </button>
+    
+        <div v-if="showMembers" class="members-dropdown" @click.stop>
+          <div class="members-header">Group Members</div>
+          <ul>
+            <li v-for="member in members" :key="member" class="member-item">
+              <span class="member-dot"></span> {{ member }}
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
     <div class="chat-messages" ref="chatMessages">
       <p v-if="messages.length === 0">No messages yet...</p>
@@ -135,6 +152,8 @@ export default {
       message: "",
       messages: [],
       conversations: [],
+      members: [],      
+      showMembers: false,
       userToken: localStorage.getItem("token"),
       convName: localStorage.getItem("conversationName") || "Unknown User",
       conversationPhoto: null,
@@ -201,6 +220,7 @@ export default {
         showReactedList: false,
         reactionLoading: false,
       }));
+      this.members = response.data.members || [];
       if (response.data.name) {
         this.convName = response.data.name;
       }
@@ -282,6 +302,7 @@ export default {
       }
     },
     closeAllMenus() {
+      this.showMembers = false;
       for (const id in this.messageOptions) {
         this.messageOptions[id].showForwardMenu = false;
       }
@@ -375,9 +396,7 @@ export default {
 </script>
 
 <style scoped>
-/* ------------------------------------
-   COLOR SYSTEM (EASY TO TUNE LATER)
-------------------------------------- */
+
 :root {
   --brand-color: #4a90e2;
   --brand-light: #e6f1fc;
@@ -388,9 +407,7 @@ export default {
   --text-light: #555;
 }
 
-/* ------------------------------------
-   CHAT LAYOUT
-------------------------------------- */
+
 .chat-container {
   display: flex;
   flex-direction: column;
@@ -398,13 +415,11 @@ export default {
   background: #ffffff;
   overflow: hidden;
   border-radius: 12px;
-  border: 1px solid var(--border-light);
+  border: 1px solid #d9d9d9;
 }
 
-/* ------------------------------------
-   HEADER
-------------------------------------- */
-/* CHAT HEADER — modern and readable */
+
+
 .chat-header {
   display: flex;
   align-items: center;
@@ -412,6 +427,7 @@ export default {
   background-color: white; 
   border-bottom: 1px solid #3a7bc1;
   color:  #232323ff; 
+  justify-content: space-between;
 }
 
 /* conversation title */
@@ -437,6 +453,70 @@ export default {
   object-fit: cover;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-right {
+  position: relative; /* Crucial: allows the dropdown to be positioned relative to this container */
+  display: flex;
+  align-items: center;
+}
+.members-toggle-btn {
+  background: #f1f3f5;
+  border: 1px solid #d9dde0;
+  padding: 6px 12px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #4a95eb;
+  font-weight: 600;
+}
+
+.members-dropdown {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  width: 200px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+}
+
+.members-header {
+  padding: 10px;
+  font-weight: bold;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+}
+
+.members-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.member-item {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #fafafa;
+  display: flex;
+  align-items: center;
+}
+
+.member-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #2ecc71; /* Online green color */
+  border-radius: 50%;
+  margin-right: 8px;
+}
 /* ------------------------------------
    MESSAGES AREA
 ------------------------------------- */

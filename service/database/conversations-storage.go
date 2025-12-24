@@ -103,6 +103,7 @@ func (db *appdbimpl) GetConversationMembers(conversationID string) ([]string, er
 	return members, nil
 }
 
+
 func (db *appdbimpl) InsertDeliveryReceipt(messageID, userID, deliveredAt string) error {
 	_, err := db.c.Exec(`
 		INSERT INTO read_receipts (messageId, userId, deliveredAt)
@@ -188,6 +189,7 @@ func (db *appdbimpl) GetConversationDetails(conversationID, currentUserID string
 	conversation.Messages = messages
 	return conversation, nil
 }
+
 
 func (db *appdbimpl) GetMessagesForConversation(conversationID string) ([]Message, error) {
 	query := `

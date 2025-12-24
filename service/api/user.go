@@ -51,14 +51,19 @@ func (rt *_router) setMyUserName(
 		return
 	}
 	updatedUser, dbErr := rt.db.UpdateUserName(userID, req.Name)
-	if errors.Is(dbErr, database.ErrUserDoesNotExist) {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	} else if dbErr != nil {
+	if dbErr != nil {
+		if errors.Is(dbErr, database.ErrUserDoesNotExist) {
+			http.Error(w, "User not found", http.StatusNotFound)
+		    return
+		}
+		if errors.Is(dbErr, database.ErrUserAlreadyExists) {
+			http.Error(w, "This username is already taken", http.StatusConflict)
+		    return
+		} 
 		ctx.Logger.WithError(dbErr).Error("failed to update username")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	    http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	    return
+    }
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(updatedUser); err != nil {

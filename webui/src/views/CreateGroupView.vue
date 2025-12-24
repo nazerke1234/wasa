@@ -70,7 +70,7 @@
         </div>
 
         <div class="form-section image-upload-section">
-            <label for="group-image" class="input-label">Group Image (Required):</label>
+            <label for="group-image" class="input-label">Group Image:</label>
             <input
                 id="group-image"
                 ref="fileInput"
@@ -132,8 +132,7 @@ export default {
       canCreateGroup() {
         return (
           this.isNameValid &&
-          this.selectedUsers.length > 0 &&
-          this.file !== null
+          this.selectedUsers.length > 0 
         );
       },
     },

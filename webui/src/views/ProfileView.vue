@@ -44,7 +44,7 @@
           />
           <button
             class="primary-btn"
-            :disabled="!canUpdateUsername"
+            
             @click="updateUsername"
           >
             Update Username
@@ -79,16 +79,7 @@ export default {
       successmsg: null, 
     };
   },
-  computed: {
-    canUpdateUsername() {
-      return (
-        this.newUserName &&
-        this.newUserName !== this.userName &&
-        this.newUserName.length >= 3 &&
-        this.newUserName.length <= 16
-      );
-    },
-  },
+  
 
   methods: {
     async fetchUserProfile() {
@@ -129,7 +120,7 @@ export default {
             Authorization: `Bearer ${token}`,
           },
         });
-        this.successmsg = "Username updated successfully!";
+        this.successmsg = "Profile photo updated successfully!";
         setTimeout(() => { this.successmsg = null; }, 3000);
         this.newPhoto = null;
         this.fetchUserProfile(); 
@@ -139,6 +130,9 @@ export default {
       }
     },
     async updateUsername() {
+      if (!this.newUserName || this.newUserName === this.userName) return;
+      this.errormsg = null; 
+      this.successmsg = null;
       try {
         const token = localStorage.getItem("token");
         const response = await axios.put(
@@ -151,14 +145,23 @@ export default {
           }
         );
         this.successmsg = "Username updated successfully!";
-        this.errormsg = null; // Clear any previous error
-        setTimeout(() => { this.successmsg = null; }, 3000);
         localStorage.setItem("name", this.newUserName);
         this.userName = response.data.name;
         this.newUserName = response.data.name;
+        setTimeout(() => { this.successmsg = null; }, 3000);
       } catch (error) {
         console.error("Failed to update username:", error);
-        this.errormsg = "Failed to update username. Please try again.";
+        if (error.response) {
+          if (error.response.status === 409) {
+            this.errormsg = "This username is already taken. Please choose another one.";
+          } else if (error.response.status === 400) {
+            this.errormsg = "Invalid username format or length.";
+          } else {
+            this.errormsg = "An error occurred. Please try again later.";
+          }
+        } else {
+          this.errormsg = "Could not connect to the server. Please check your connection.";
+        }
       }
     },
     
@@ -283,6 +286,6 @@ export default {
 
 .primary-btn:disabled {
   background: #aac7ed;
-    cursor: not-allowed;
+  cursor: not-allowed;
 }
 </style>
