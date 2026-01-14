@@ -341,7 +341,7 @@ export default {
     color:  #34495e;
 }
 
-/* Tertiary small button for adding */
+
 .btn-small-tertiary {
     padding: 6px 12px;
     font-size: 0.85rem;

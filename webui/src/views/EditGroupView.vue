@@ -301,7 +301,7 @@ export default {
   padding: 15px;
   background-color: #ffffff;
   border-radius: 8px;
-  border-left: 5px solid #4a90e2; /* Accent color */
+  border-left: 5px solid #4a90e2; 
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
@@ -339,7 +339,7 @@ export default {
   gap: 30px;
   width: 100%;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0; /* Fixed: --color-border-light */
+  border-bottom: 1px solid #e0e0e0; 
   margin-bottom: 20px;
 }
 
@@ -398,7 +398,7 @@ export default {
   font-size: 1rem;
 }
 .input-field:focus {
-  border-color: #4a90e2; /* Fixed: --brand-color-primary */
+  border-color: #4a90e2; 
   outline: none;
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
@@ -422,7 +422,7 @@ button {
 }
 
 .btn-primary {
-  background-color: #4a90e2; /* Fixed: --brand-color-primary */
+  background-color: #4a90e2; 
   color: white;
 }
 .btn-primary:hover:not(:disabled) {
@@ -430,7 +430,7 @@ button {
 }
 
 .btn-secondary {
-  background-color: #28a745; /* Fixed: --brand-color-secondary */
+  background-color: #28a745; 
   color: white;
 }
 .btn-secondary:hover:not(:disabled) {
@@ -439,8 +439,8 @@ button {
 
 .btn-tertiary {
   background-color: #f0f0f0;
-  color: #4a90e2; /* Fixed: --brand-color-primary */
-  border: 1px solid #4a90e2; /* Fixed: --brand-color-primary */
+  color: #4a90e2; 
+  border: 1px solid #4a90e2; 
   padding: 8px 14px;
   font-size: 0.9rem;
 }
@@ -449,7 +449,7 @@ button {
 }
 
 .btn-danger {
-  background-color: #dc3545; /* Fixed: --brand-color-danger */
+  background-color: #dc3545; 
   color: white;
   margin-top: 30px;
 }
@@ -513,7 +513,7 @@ button:disabled {
 
 .result-username {
   font-weight: 500;
-  color: #34495e; /* Fixed: --color-text-dark */
+  color: #34495e; 
 }
 
 .empty-results {

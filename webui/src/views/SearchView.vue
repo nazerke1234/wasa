@@ -159,7 +159,7 @@ export default {
     gap: 10px;
 }
 
-/* Primary Button: Used for Search and Start Chat */
+/* Start Chat */
 .btn-chat-primary {
     background-color: #4a90e2;
     color: white;
@@ -176,7 +176,7 @@ export default {
     box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 }
 
-/* Secondary Button: Used for New group */
+/* New group */
 .btn-chat-secondary {
     background-color: white;
     color: #4a90e2;
@@ -193,7 +193,7 @@ export default {
     color: #3a74b6;
 }
 
-/* Tertiary Button: Used for Log Out */
+/* Log Out */
 .btn-chat-tertiary {
     background-color: transparent;
     color: #7f8c8d;
@@ -229,7 +229,7 @@ search-box {
   border: 1px solid #bdc3c7;
   border-radius: 8px;
   font-size: 16px;
-  width: 100%; /* Take full width of its area */
+  width: 100%; 
   max-width: 400px;
   transition: border-color 0.2s;
 }

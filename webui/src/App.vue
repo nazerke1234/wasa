@@ -123,7 +123,7 @@ export default {}
 }
 
 main {
-  background-color: #f4f7fb; /* optional */
+  background-color: #f4f7fb; 
   min-height: 100vh;
   padding-top: 1rem;
 }

@@ -128,7 +128,7 @@ export default {
     gap: 10px;
 }
 
-/* Primary Button: Start Chat */
+/* Start Chat */
 .btn-chat-primary {
     background-color: #4a90e2;
     color: white;
@@ -145,7 +145,7 @@ export default {
     box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 }
 
-/* Secondary Button: New group */
+/* New group */
 .btn-chat-secondary {
     background-color: white;
     color: #4a90e2;
@@ -162,7 +162,7 @@ export default {
     color: #3a74b6;
 }
 
-/* Tertiary Button: Log Out */
+/* Log Out */
 .btn-chat-tertiary {
     background-color: transparent;
     color: #7f8c8d;
@@ -249,7 +249,6 @@ export default {
 }
 
 .member-names {
-    /* Prevents the list from breaking the layout if it's too long */
     display: inline-block;
     max-width: 250px;
     white-space: nowrap;
@@ -265,7 +264,6 @@ export default {
     margin: 4px 0 0 0;
     font-size: 0.85rem;
     color: #7f8c8d;
-    /* Limits the list to one line with ellipsis if too long */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -430,7 +430,7 @@ export default {
   justify-content: space-between;
 }
 
-/* conversation title */
+
 .chat-header h3 {
   font-size: 30px;
   margin: 0;
@@ -459,7 +459,7 @@ export default {
 }
 
 .header-right {
-  position: relative; /* Crucial: allows the dropdown to be positioned relative to this container */
+  position: relative; 
   display: flex;
   align-items: center;
 }
@@ -513,7 +513,7 @@ export default {
 .member-dot {
   width: 8px;
   height: 8px;
-  background-color: #2ecc71; /* Online green color */
+  background-color: #2ecc71; 
   border-radius: 50%;
   margin-right: 8px;
 }
@@ -625,7 +625,7 @@ export default {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #f1f3f5; /* light gray */
+  background-color: #f1f3f5; 
   border: 1px solid #c5cbd3;
   font-size: 12px;
   cursor: pointer;
@@ -636,17 +636,19 @@ export default {
   transition: all 0.2s ease;
 }
 
+
 .action-button:hover {
-  background-color: var(--brand-light);
-  border-color: var(--brand-color);
-  color: var(--brand-color);
+  background-color: #e6f1fc;
+  border-color: #4a90e2;
+  color: #4a90e2;
 }
+
 .reply-button {
   font-size: 10px;
   margin-right: 5px;
 }
 
-/* If it’s the liked heart */
+
 .has-reacted {
   background-color: #ffe3e3 !important;
   border-color: #ff8b8b !important;
@@ -654,9 +656,7 @@ export default {
 }
 
 
-/* ------------------------------------
-   FORWARD MENU
-------------------------------------- */
+
 .forward-options {
   position: absolute;
   right: 0;
@@ -740,9 +740,7 @@ export default {
   margin: 2px 0;
 }
 
-/* ------------------------------------
-   REPLY PREVIEW
-------------------------------------- */
+
 .reply-preview-box {
   background-color: #d9dde0ff;
   border-left: 4px solid #4a95ebff;
@@ -772,9 +770,7 @@ export default {
   color: #2f2f2fff;
 }
 
-/* ------------------------------------
-   INPUT AREA
-------------------------------------- */
+
 .chat-input {
   display: flex;
   align-items: center;

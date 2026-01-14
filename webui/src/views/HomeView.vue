@@ -154,7 +154,7 @@ export default {
     padding-bottom: 0.5rem !important;
 }
 .mb-4 {
-    margin-bottom: 1.5rem !important; /* Adjusted margin for better separation */
+    margin-bottom: 1.5rem !important; 
 }
 
 .conversation-header {
@@ -165,11 +165,11 @@ export default {
 
 .button-group-container {
     display: flex;
-    gap: 10px; /* Space between buttons */
+    gap: 10px; 
 }
 
 
-/* Primary Button: Start Chat */
+/* Start Chat */
 .btn-chat-primary {
     background-color: #4a90e2;
     color: white;
@@ -185,7 +185,7 @@ export default {
     box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 }
 
-/* Secondary Button: New group */
+/* New group */
 .btn-chat-secondary {
     background-color: white;
     color: #4a90e2;
@@ -201,7 +201,7 @@ export default {
     color: #3a74b6;
 }
 
-/* Tertiary Button: Log Out */
+/* Log Out */
 .btn-chat-tertiary {
     background-color: transparent;
     color: #7f8c8d;
