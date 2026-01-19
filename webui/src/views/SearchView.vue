@@ -107,7 +107,7 @@ export default {
     },
     navigateToConversation(recipientId, recipientName) {
       this.error = "";
-      
+       
       localStorage.setItem("conversationName", recipientName);
       const senderId = localStorage.getItem("token");
       
@@ -159,7 +159,7 @@ export default {
     gap: 10px;
 }
 
-/* Start Chat */
+
 .btn-chat-primary {
     background-color: #4a90e2;
     color: white;
@@ -176,7 +176,7 @@ export default {
     box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 }
 
-/* New group */
+
 .btn-chat-secondary {
     background-color: white;
     color: #4a90e2;
@@ -193,7 +193,7 @@ export default {
     color: #3a74b6;
 }
 
-/* Log Out */
+
 .btn-chat-tertiary {
     background-color: transparent;
     color: #7f8c8d;

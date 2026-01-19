@@ -25,13 +25,13 @@ export default {
            throw new Error(`Failed to fetch default photo: ${response.statusText}`);
         }
         
-        const blob = await response.blob();
-        const reader = new FileReader();
+        const blob = await response.blob();   
+        const reader = new FileReader();   
 
         return new Promise((resolve, reject) => {
-          reader.onload = () => {
+          reader.onload = () => {                     
             
-            const base64String = reader.result.toString().split(',')[1];
+            const base64String = reader.result.toString().split(',')[1];   
             resolve(base64String);
           };
           reader.onerror = reject;
@@ -46,13 +46,13 @@ export default {
   
     async doLogin() {
       
-      if (this.userName.trim() === "") {
+      if (this.userName.trim() === "") {   
         this.errorMessage = "Name cannot be empty.";
         return;
       }
       
       this.errorMessage = null;
-      this.isSubmitting = true; // Disable button
+      this.isSubmitting = true; 
 
       try {
         const photoData = await this.loadDefaultPhoto();
@@ -78,11 +78,11 @@ export default {
         localStorage.setItem("name", this.userProfile.name);
   
 
-        this.$router.push({ path: "/home" });
+        this.$router.push({ path: "/home" });  
 
       } catch (e) {
         
-        console.error("Login attempt failed:", e);
+        console.error("Login attempt failed:", e);  
         if (e.response) {
           if (e.response.status === 400) {
             this.errorMessage = "Input error: Please ensure your name meets all requirements.";
@@ -134,9 +134,6 @@ export default {
 
 
 
-.btn-primary {
-  background-color: #4a90e2;
-}
 
 .login-page-wrapper {
   display: flex;
@@ -216,7 +213,7 @@ export default {
 }
 
 
-@media (max-width: 500px) {
+@media (max-width: 500px) { 
   .login-card {
     margin: 10% auto;
   }

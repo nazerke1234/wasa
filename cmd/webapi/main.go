@@ -12,7 +12,7 @@ import (
 	"syscall"
 
 	"github.com/ardanlabs/conf"
-	_ "github.com/mattn/go-sqlite3"
+     _"github.com/mattn/go-sqlite3"
 	"github.com/nazerke1234/wasa/service/api"
 	"github.com/nazerke1234/wasa/service/database"
 	"github.com/nazerke1234/wasa/service/globaltime"

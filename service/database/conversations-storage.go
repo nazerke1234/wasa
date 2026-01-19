@@ -173,8 +173,8 @@ func (db *appdbimpl) GetConversationDetails(conversationID, currentUserID string
 		}
 		if otherUserID != "" {
 			var userPhotoData []byte
-			err := db.c.QueryRow("SELECT photo FROM users WHERE id = ?", otherUserID).Scan(&userPhotoData)
-			if err == nil && len(userPhotoData) > 0 {
+			err := db.c.QueryRow("SELECT photo FROM users WHERE id = ?", otherUserID).Scan(&userPhotoData) // when direct conversation, a userphoto of the person that you
+			if err == nil && len(userPhotoData) > 0 {                                                      // are talking to is shown
 				conversation.ConversationPhoto = sql.NullString{
 					String: base64.StdEncoding.EncodeToString(userPhotoData),
 					Valid:  true,
@@ -203,7 +203,7 @@ SELECT
     m.replyTo,
     u.name AS senderName,
     u.photo AS senderPhoto,
-    ((SELECT COUNT(*) FROM conversation_members WHERE conversationId = m.conversationId) - 1) AS totalRecipients,
+    ((SELECT COUNT(*) FROM conversation_members WHERE conversationId = m.conversationId) - 1) AS totalRecipients,  
     (SELECT COUNT(*) FROM read_receipts WHERE messageId = m.id AND readAt IS NOT NULL) AS readCount,
     COUNT(c.id) AS reaction_count,
     GROUP_CONCAT(DISTINCT u2.name) AS reacting_user_names,
@@ -231,7 +231,7 @@ ORDER BY m.timestamp ASC;
 		var senderPhoto []byte
 		var totalRecipients, readCount, reactionCount int
 		var reactingUserNames sql.NullString
-		err := rows.Scan(
+		err := rows.Scan(     // pours data from sql results onto the varibales 
 			&msg.Id,
 			&msg.ConversationId,
 			&msg.SenderId,
@@ -262,13 +262,13 @@ ORDER BY m.timestamp ASC;
 			msg.ReactingUserNames = []string{}
 		}
 		if totalRecipients > 0 && readCount >= totalRecipients {
-			msg.Status = "✓✓"
+			msg.Status = "✓✓"                                             //puttin chekmarks when is read/or not by all members 
 		} else {
 			msg.Status = "✓"
 		}
 		messages = append(messages, msg)
 	}
-	if err := rows.Err(); err != nil {
+	if err := rows.Err(); err != nil {                                    //check the errors on each row
 		return nil, fmt.Errorf("error iterating message rows: %w", err)
 	}
 	return messages, nil

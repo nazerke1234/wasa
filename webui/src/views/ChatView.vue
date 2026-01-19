@@ -29,8 +29,8 @@
         v-for="message in messages"
         :key="message.id"
         class="message"
-        :class="message.senderId === userToken ? 'self' : 'other'"
-        :style="message.senderId !== userToken && conversationType === 'group' ? { paddingLeft: '45px' } : {}"
+        :class="message.senderId === userToken ? 'self' : 'other'"   
+        :style="message.senderId !== userToken && conversationType === 'group' ? { paddingLeft: '45px' } : {}" 
       >
         <div v-if="conversationType === 'group' && message.senderId !== userToken" class="sender-thumbnail">
           <img :src="'data:image/jpeg;base64,' + message.senderPhoto" alt="Sender Photo" />
@@ -274,7 +274,7 @@ export default {
       await axios.delete(`/conversations/${this.conversationId}/message/${message.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      this.messages = this.messages.filter(m => m.id !== message.id);
+      this.messages = this.messages.filter(m => m.id !== message.id); //delete the message from the screen that we have just deleted
     },
     formatTimestamp(timestamp) {
       const date = new Date(timestamp);

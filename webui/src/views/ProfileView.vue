@@ -9,9 +9,8 @@
       </button>
     </header>
 
-    <!-- Profile Card -->
+    
     <div class="profile-card">
-      <!-- Avatar -->
       <div class="avatar-wrapper">
         <img
           v-if="userPhoto"
@@ -22,7 +21,7 @@
         <div v-else class="avatar placeholder">No photo</div>
       </div>
 
-      <!-- Update photo -->
+
       <div class="form-group">
         <input type="file" @change="handlePhotoUpload" />
         <button
@@ -34,7 +33,7 @@
         </button>
       </div>
 
-      <!-- User Info -->
+      
       <div class="form-group">
         <input
             v-model="newUserName"
@@ -61,8 +60,8 @@
 <script>
 import axios from "../services/axios";
 import ErrorMsg from "../components/ErrorMsg.vue";
-
 import SuccessMsg from "../components/SuccessMsg.vue";
+
 export default {
   name: "ProfileView",
   components: {

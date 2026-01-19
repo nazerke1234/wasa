@@ -82,7 +82,7 @@ export default {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          this.$router.push({ path: "/" });
+          this.$router.push({ path: "/" });           //go to login
           return;
         }
         const response = await this.$axios.get("/conversations", {
@@ -101,15 +101,15 @@ export default {
     viewConversation(conversationId, conversationName) {
       localStorage.setItem("conversationName", conversationName);
       this.$router.push({
-        path: `/conversations/${conversationId}`,
+        path: `/conversations/${conversationId}`,         //go to chatview
       });
     },
     truncateText(text, length = 50, clamp = '...') {
       if (!text || text.length <= length) {
         return text;
       }
-      const lastSpaceIndex = text.substring(0, length).lastIndexOf(' ');
-      if (lastSpaceIndex === -1) {
+      const lastSpaceIndex = text.substring(0, length).lastIndexOf(' '); // cut when the word ends
+      if (lastSpaceIndex === -1) { //no index found
         return text.substring(0, length) + clamp;
       }
       return text.substring(0, lastSpaceIndex) + clamp;
@@ -119,7 +119,7 @@ export default {
     },
     getFormattedMessage(message) {
       if (this.isForwarded(message)) {
-        return message.content;
+        return message.content;    
       }
       return this.truncateText(message.content);
     },
@@ -133,18 +133,18 @@ export default {
       this.$router.push({ path: "/new-group" });
     },
   },
-  mounted() {
+  mounted() {                                      //implemented at the time the page loaded
     this.username = localStorage.getItem("name") || "Guest";
     this.loadConversations();
     this.pollIntervalId = setInterval(() => {
       this.loadConversations();
-    }, 5000);
+    }, 5000);                                      //refresh the page every 5 seconds
   },
-  unmounted() {
-    clearInterval(this.pollIntervalId);
+  unmounted() {                                    //when i close the page(component)
+    clearInterval(this.pollIntervalId);            //stop timer
   },
 };
-</script>
+</script>. 
 
 <style>
 .pt-3 {

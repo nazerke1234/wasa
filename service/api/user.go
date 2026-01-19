@@ -19,7 +19,7 @@ func (rt *_router) getAuthenticatedUserID(r *http.Request) (string, error) {
 	if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
 		return "", ErrUnauthorized
 	}
-	userID := authHeader[7:]
+	userID := authHeader[7:]     //extract userID without Bearer word
 	if userID == "" {
 		return "", ErrUnauthorized
 	}
@@ -97,7 +97,7 @@ func (rt *_router) setMyPhoto(
 		return
 	}
 	defer file.Close()
-	photoData, err := io.ReadAll(file)
+	photoData, err := io.ReadAll(file) //slice of bytes 
 	if err != nil {
 		http.Error(w, "Failed to read photo file", http.StatusInternalServerError)
 		return
